@@ -1,0 +1,152 @@
+/*
+ * Pausable - Pause and resume JavaScript code
+ * Copyright (c) Dan Phillimore (asmblah)
+ * http://asmblah.github.com/pausable/
+ *
+ * Released under the MIT license
+ * https://github.com/asmblah/pausable/raw/master/MIT-LICENSE.txt
+ */
+
+'use strict';
+
+var _ = require('lodash'),
+    esprima = require('esprima'),
+    estraverse = require('estraverse'),
+    Syntax = estraverse.Syntax;
+
+function BlockContext(functionContext) {
+    this.functionContext = functionContext;
+    this.switchCases = [];
+    this.transformNext = null;
+}
+
+_.extend(BlockContext.prototype, {
+    addAssignment: function (name) {
+        var context = this,
+            index = context.functionContext.getNextStatementIndex();
+
+        return {
+            assign: function (expressionNode) {
+                if (!expressionNode) {
+                    throw new Error('Expression node must be specified');
+                }
+
+                context.functionContext.addAssignment(index, name);
+
+                context.switchCases[index] = createSwitchCase(
+                    {
+                        'type': Syntax.ExpressionStatement,
+                        'expression': {
+                            'type': Syntax.AssignmentExpression,
+                            'operator': '=',
+                            'left': {
+                                'type': Syntax.Identifier,
+                                'name': name
+                            },
+                            'right': expressionNode
+                        }
+                    },
+                    index
+                );
+            }
+        };
+    },
+
+    getSwitchStatement: function () {
+        var switchCases = [];
+
+        _.each(this.switchCases, function (switchCase) {
+            if (switchCase) {
+                if (_.isArray(switchCase)) {
+                    [].push.apply(switchCases, switchCase);
+                } else {
+                    switchCases.push(switchCase);
+                }
+            }
+        });
+
+        return {
+            'type': Syntax.SwitchStatement,
+            'discriminant': {
+                'type': Syntax.Identifier,
+                'name': 'statementIndex'
+            },
+            'cases': switchCases
+        };
+    },
+
+    prepareStatement: function () {
+        var context = this,
+            endIndex = null,
+            index = context.functionContext.getNextStatementIndex();
+
+        return {
+            assign: function (statementNode, nextIndex) {
+                var i,
+                    switchCases = [];
+
+                if (context.transformNext) {
+                    statementNode = context.transformNext(statementNode);
+                    context.transformNext = null;
+                }
+
+                if (!endIndex) {
+                    endIndex = context.functionContext.getCurrentStatementIndex();
+                }
+
+                for (i = index; i < endIndex - 1; i++) {
+                    switchCases.push({
+                        type: Syntax.SwitchCase,
+                        test: {
+                            type: Syntax.Literal,
+                            value: i
+                        },
+                        consequent: i === index ? [
+                            esprima.parse('statementIndex = ' + (index + 1) + ';').body[0]
+                        ] : []
+                    });
+                }
+
+                switchCases.push(createSwitchCase(statementNode, endIndex - 1, nextIndex));
+
+                context.switchCases[index] = switchCases;
+            },
+
+            captureEndIndex: function () {
+                endIndex = context.functionContext.getCurrentStatementIndex();
+            },
+
+            getEndIndex: function () {
+                return endIndex;
+            },
+
+            getIndex: function () {
+                return index;
+            }
+        };
+    },
+
+    transformNextStatement: function (transformer) {
+        this.transformNext = transformer;
+    }
+});
+
+function createSwitchCase(statementNode, index, nextIndex) {
+    if (!nextIndex) {
+        nextIndex = index + 1;
+    }
+
+    return {
+        type: Syntax.SwitchCase,
+        test: {
+            type: Syntax.Literal,
+            value: index
+        },
+        consequent: [
+            statementNode,
+            esprima.parse('statementIndex = ' + nextIndex + ';').body[0]
+        ]
+    };
+}
+
+module.exports = BlockContext;
