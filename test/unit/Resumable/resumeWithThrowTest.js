@@ -89,6 +89,30 @@ EOS
                 error: 23,
                 second: true
             }
+        },
+        'throwing an error outside any try..catch': {
+            code: nowdoc(function () {/*<<<EOS
+exports.before = true;
+tools.throwMe(21);
+exports.after = true;
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    tools: {
+                        throwMe: function (what) {
+                            var pause = state.resumable.createPause();
+
+                            setTimeout(function () {
+                                pause.throw(what);
+                            });
+
+                            pause.now();
+                        }
+                    }
+                };
+            },
+            expectedError: 21
         }
     }, tools.check);
 });

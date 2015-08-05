@@ -20,6 +20,7 @@ module.exports = {
             beforeEach(function (done) {
                 var expose;
 
+                this.error = null;
                 this.resolved = false;
                 this.resumable = new Resumable(new Transpiler());
 
@@ -52,6 +53,7 @@ module.exports = {
                 });
             } else {
                 it('should reject the promise with the correct error', function () {
+                    expect(this.error).not.to.be.null;
                     expect(this.error.toString()).to.equal(scenario.expectedError.toString());
                 });
             }

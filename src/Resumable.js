@@ -68,6 +68,12 @@ _.extend(Resumable.prototype, {
                             break;
                         }
                     }
+
+                    if (i === states.length) {
+                        // Error was not handled by anything up the call stack
+                        promise.reject(error);
+                        return;
+                    }
                 }
 
                 for (; i < states.length; i++) {
