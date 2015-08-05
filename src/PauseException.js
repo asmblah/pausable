@@ -30,7 +30,7 @@ _.extend(PauseException.prototype, {
         var exception = this;
 
         try {
-            exception.resumer(exception.promise, result, exception.states);
+            exception.resumer(exception.promise, null, result, exception.states);
         } catch (e) {
             // Just re-throw if another PauseException gets raised,
             // we're just looking for normal errors
@@ -45,6 +45,23 @@ _.extend(PauseException.prototype, {
 
     setPromise: function (promise) {
         this.promise = promise;
+    },
+
+    throw: function (error) {
+        var exception = this;
+
+        try {
+            exception.resumer(exception.promise, error, null, exception.states);
+        } catch (e) {
+            // Just re-throw if another PauseException gets raised,
+            // we're just looking for normal errors
+            if (e instanceof PauseException) {
+                throw e;
+            }
+
+            // Reject the promise for the run with the error thrown
+            exception.promise.reject(e);
+        }
     }
 });
 

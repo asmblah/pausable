@@ -13,7 +13,10 @@ var _ = require('lodash'),
     escodegen = require('escodegen'),
     esprima = require('esprima'),
     PauseException = require('./PauseException'),
-    Promise = require('./Promise')
+    Promise = require('./Promise'),
+    FROM = 'from',
+    PARAM = 'param',
+    TO = 'to';
 
 function Resumable(transpiler) {
     this.transpiler = transpiler;
@@ -26,12 +29,48 @@ _.extend(Resumable, {
 
 _.extend(Resumable.prototype, {
     createPause: function () {
-        var pause = new PauseException(function (promise, result, states) {
-                var i,
+        var pause = new PauseException(function (promise, error, result, states) {
+                var i = 0,
                     lastResult = result,
                     state;
 
-                for (i = 0; i < states.length; i++) {
+                if (error) {
+                    for (; i < states.length; i++) {
+                        state = states[i];
+
+                        _.each(state.catches, function (data, catchStatementIndex) {
+                            if (state.statementIndex < data[FROM] || state.statementIndex > data[TO]) {
+                                return;
+                            }
+
+                            state.statementIndex = catchStatementIndex * 1;
+                            state[data[PARAM]] = error;
+                            error = null;
+
+                            Resumable._resumeState_ = state;
+
+                            try {
+                                lastResult = state.func();
+                            } catch (e) {
+                                if (e instanceof PauseException) {
+                                    e.setPromise(promise);
+
+                                    return false;
+                                }
+
+                                throw e;
+                            }
+
+                            return false;
+                        });
+
+                        if (error === null) {
+                            break;
+                        }
+                    }
+                }
+
+                for (; i < states.length; i++) {
                     state = states[i];
 
                     if (state.assignments[state.statementIndex - 1]) {

@@ -19,6 +19,7 @@ var _ = require('lodash'),
 
 function FunctionContext() {
     this.assignmentVariables = {};
+    this.catches = [];
     this.functionDeclarations = [];
     this.labelIndex = -1;
     this.labelUsed = false;
@@ -37,6 +38,10 @@ _.extend(FunctionContext.prototype, {
 
         context.assignmentVariables[index] = variableName;
         context.lastAssignments.push(variableName);
+    },
+
+    addCatch: function (data) {
+        this.catches.push(data);
     },
 
     addFunctionDeclaration: function (declaration) {
@@ -82,6 +87,7 @@ _.extend(FunctionContext.prototype, {
 
     getStatements: function (switchStatement) {
         var assignmentProperties = [],
+            catchesProperties,
             declaration = esprima.parse('var statementIndex = 0;').body[0],
             functionContext = this,
             index,
@@ -114,6 +120,74 @@ _.extend(FunctionContext.prototype, {
                 }
             });
         });
+
+        if (functionContext.catches.length > 0) {
+            catchesProperties = [];
+            _.each(functionContext.catches, function (catchData) {
+                catchesProperties.push({
+                    'type': Syntax.Property,
+                    'kind': 'init',
+                    'key': {
+                        'type': Syntax.Identifier,
+                        'name': catchData.catchStatementIndex
+                    },
+                    'value': {
+                        type: Syntax.ObjectExpression,
+                        properties: [
+                            {
+                                'type': Syntax.Property,
+                                'kind': 'init',
+                                'key': {
+                                    'type': Syntax.Identifier,
+                                    'name': 'from'
+                                },
+                                'value': {
+                                    type: Syntax.Literal,
+                                    value: catchData.tryStartIndex
+                                }
+                            },
+                            {
+                                'type': Syntax.Property,
+                                'kind': 'init',
+                                'key': {
+                                    'type': Syntax.Identifier,
+                                    'name': 'to'
+                                },
+                                'value': {
+                                    type: Syntax.Literal,
+                                    value: catchData.tryEndIndex
+                                }
+                            },
+                            {
+                                'type': Syntax.Property,
+                                'kind': 'init',
+                                'key': {
+                                    'type': Syntax.Identifier,
+                                    'name': 'param'
+                                },
+                                'value': {
+                                    type: Syntax.Literal,
+                                    value: catchData.catchParameter
+                                }
+                            }
+                        ]
+                    }
+                });
+            });
+
+            stateProperties.push({
+                'type': Syntax.Property,
+                'kind': 'init',
+                'key': {
+                    'type': Syntax.Identifier,
+                    'name': 'catches'
+                },
+                'value': {
+                    type: Syntax.ObjectExpression,
+                    properties: catchesProperties
+                }
+            });
+        }
 
         for (index = 0; index < functionContext.nextTempIndex; index++) {
             stateProperties.push({

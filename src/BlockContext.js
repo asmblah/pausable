@@ -12,6 +12,7 @@
 var _ = require('lodash'),
     esprima = require('esprima'),
     estraverse = require('estraverse'),
+    CONSEQUENT = 'consequent',
     Syntax = estraverse.Syntax;
 
 function BlockContext(functionContext) {
@@ -50,6 +51,71 @@ _.extend(BlockContext.prototype, {
                 );
             }
         };
+    },
+
+    addResumeThrow: function () {
+        var context = this,
+            index = context.functionContext.getCurrentStatementIndex();
+
+        return {
+            assign: function (expressionNode) {
+                var endIndex = context.functionContext.getCurrentStatementIndex() - 1,
+                    i;
+
+                if (!expressionNode) {
+                    throw new Error('Expression node must be specified');
+                }
+
+                // Previous statement needs to skip over the throw:
+                // it will only be needed for resumes
+                context.appendToLastStatement({
+                    'type': Syntax.BreakStatement,
+                    'label': null
+                });
+
+                // Add a case that simply throws the error,
+                // to allow us to easily resume inside a catch block
+                for (i = index; i < endIndex; i++) {
+                    context.switchCases[i] = {
+                        'type': Syntax.SwitchCase,
+                        'test': {
+                            type: Syntax.Literal,
+                            value: i
+                        },
+                        'consequent': []
+                    };
+                }
+
+                context.switchCases[endIndex] = {
+                    'type': Syntax.SwitchCase,
+                    'test': {
+                        type: Syntax.Literal,
+                        value: endIndex
+                    },
+                    'consequent': [
+                        {
+                            'type': Syntax.ThrowStatement,
+                            'argument': expressionNode
+                        }
+                    ]
+                };
+            }
+        };
+    },
+
+    appendToLastStatement: function (statementNode) {
+        var context = this,
+            switchCase = context.switchCases[context.switchCases.length - 1];
+
+        if (!switchCase) {
+            return;
+        }
+
+        if (_.isArray(switchCase)) {
+            switchCase[switchCase.length - 1][CONSEQUENT].push(statementNode);
+        } else {
+            switchCase.push(statementNode);
+        }
     },
 
     getSwitchStatement: function () {

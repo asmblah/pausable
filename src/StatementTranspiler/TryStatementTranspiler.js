@@ -32,31 +32,29 @@ _.extend(TryStatementTranspiler.prototype, {
     },
 
     transpile: function (node, parent, functionContext, blockContext) {
-        var handlers = [],
+        var catchStatementIndex,
+            handlers = [],
             ownBlockContext = new BlockContext(functionContext),
             statement,
             transpiler = this,
-            tryNode;
+            tryEndIndex,
+            tryNode,
+            tryStartIndex;
 
         statement = blockContext.prepareStatement();
 
+        tryStartIndex = functionContext.getCurrentStatementIndex();
         transpiler.statementTranspiler.transpileArray(node[BLOCK][BODY], node, functionContext, ownBlockContext);
-
-        tryNode = {
-            'type': Syntax.TryStatement,
-            'block': {
-                'type': Syntax.BlockStatement,
-                'body': [
-                    ownBlockContext.getSwitchStatement()
-                ]
-            }
-        };
+        tryEndIndex = functionContext.getCurrentStatementIndex();
 
         if (node[HANDLERS]) {
             handlers = [];
+            catchStatementIndex = functionContext.getCurrentStatementIndex();
 
             _.each(node[HANDLERS], function (handler) {
-                var catchClauseBlockContext = new BlockContext(functionContext);
+                var catchClauseBlockContext = new BlockContext(functionContext),
+                    catchParameter = functionContext.getTempName(),
+                    resumeThrowStatement = ownBlockContext.addResumeThrow();
 
                 transpiler.statementTranspiler.transpileArray(handler[BODY][BODY], handler, functionContext, catchClauseBlockContext);
 
@@ -83,8 +81,32 @@ _.extend(TryStatementTranspiler.prototype, {
                         ]
                     }
                 });
-            });
 
+                functionContext.addCatch({
+                    tryStartIndex: tryStartIndex,
+                    tryEndIndex: tryEndIndex - 1,
+                    catchParameter: catchParameter,
+                    catchStatementIndex: catchStatementIndex
+                });
+
+                resumeThrowStatement.assign({
+                    'type': Syntax.Identifier,
+                    'name': catchParameter
+                });
+            });
+        }
+
+        tryNode = {
+            'type': Syntax.TryStatement,
+            'block': {
+                'type': Syntax.BlockStatement,
+                'body': [
+                    ownBlockContext.getSwitchStatement()
+                ]
+            }
+        };
+
+        if (node[HANDLERS]) {
             tryNode[HANDLERS] = handlers;
         }
 
