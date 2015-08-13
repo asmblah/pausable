@@ -9,13 +9,17 @@
 
 'use strict';
 
-var _ = require('lodash');
+var _ = require('lodash'),
+    util = require('util');
 
 function PauseException(resumer) {
+    this.message = 'PauseException';
     this.promise = null;
     this.resumer = resumer;
     this.states = [];
 }
+
+util.inherits(PauseException, Error);
 
 _.extend(PauseException.prototype, {
     add: function (state) {

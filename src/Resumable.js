@@ -28,6 +28,27 @@ _.extend(Resumable, {
 });
 
 _.extend(Resumable.prototype, {
+    call: function (func, args, thisObj) {
+        var promise = new Promise(),
+            result;
+
+        try {
+            result = func.apply(thisObj, args);
+        } catch (e) {
+            if (e instanceof PauseException) {
+                e.setPromise(promise);
+            } else {
+                promise.reject(e);
+            }
+
+            return promise;
+        }
+
+        promise.resolve(result);
+
+        return promise;
+    },
+
     createPause: function () {
         var pause = new PauseException(function (promise, error, result, states) {
                 var i = 0,
@@ -98,7 +119,7 @@ _.extend(Resumable.prototype, {
                     }
                 }
 
-                promise.resolve();
+                promise.resolve(lastResult);
             });
 
         return pause;
@@ -109,7 +130,7 @@ _.extend(Resumable.prototype, {
             expose,
             func,
             names = ['Resumable'],
-            promise = new Promise(),
+            resumable = this,
             transpiledCode,
             values = [Resumable];
 
@@ -121,7 +142,7 @@ _.extend(Resumable.prototype, {
             values.push(value);
         });
 
-        ast = this.transpiler.transpile(ast);
+        ast = resumable.transpiler.transpile(ast);
 
         transpiledCode = escodegen.generate(ast, {
             format: {
@@ -135,21 +156,7 @@ _.extend(Resumable.prototype, {
         /*jshint evil:true */
         func = new Function(names, 'return ' + transpiledCode);
 
-        try {
-            func.apply(null, values)();
-        } catch (e) {
-            if (e instanceof PauseException) {
-                e.setPromise(promise);
-            } else {
-                promise.reject(e);
-            }
-
-            return promise;
-        }
-
-        promise.resolve();
-
-        return promise;
+        return resumable.call(func.apply(null, values), [], null);
     }
 });
 
