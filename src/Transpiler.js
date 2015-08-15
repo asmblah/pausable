@@ -11,7 +11,7 @@
 
 var _ = require('lodash'),
     escodegen = require('escodegen'),
-    esprima = require('esprima'),
+    acorn = require('acorn'),
     estraverse = estraverse,
     ArrayExpressionTranspiler = require('./ExpressionTranspiler/ArrayExpressionTranspiler'),
     AssignmentExpressionTranspiler = require('./ExpressionTranspiler/AssignmentExpressionTranspiler'),

@@ -10,12 +10,12 @@
 'use strict';
 
 var _ = require('lodash'),
-    esprima = require('esprima'),
+    acorn = require('acorn'),
     estraverse = require('estraverse'),
     BlockContext = require('../BlockContext'),
     BLOCK = 'block',
     BODY = 'body',
-    HANDLERS = 'handlers',
+    HANDLER = 'handler',
     FINALIZER = 'finalizer',
     NAME = 'name',
     PARAM = 'param',
@@ -33,8 +33,9 @@ _.extend(TryStatementTranspiler.prototype, {
 
     transpile: function (node, parent, functionContext, blockContext) {
         var catchStatementIndex,
-            handlers = [],
+            handler = node[HANDLER],
             ownBlockContext = new BlockContext(functionContext),
+            resultHandler = null,
             statement,
             transpiler = this,
             tryEndIndex,
@@ -47,18 +48,17 @@ _.extend(TryStatementTranspiler.prototype, {
         transpiler.statementTranspiler.transpileArray(node[BLOCK][BODY], node, functionContext, ownBlockContext);
         tryEndIndex = functionContext.getCurrentStatementIndex();
 
-        if (node[HANDLERS]) {
-            handlers = [];
+        if (handler) {
             catchStatementIndex = functionContext.getCurrentStatementIndex();
 
-            _.each(node[HANDLERS], function (handler) {
+            (function () {
                 var catchClauseBlockContext = new BlockContext(functionContext),
                     catchParameter = functionContext.getTempName(),
                     resumeThrowStatement = ownBlockContext.addResumeThrow();
 
                 transpiler.statementTranspiler.transpileArray(handler[BODY][BODY], handler, functionContext, catchClauseBlockContext);
 
-                handlers.push({
+                resultHandler = {
                     'type': Syntax.CatchClause,
                     'param': handler[PARAM],
                     'body': {
@@ -66,7 +66,7 @@ _.extend(TryStatementTranspiler.prototype, {
                         'body': [
                             {
                                 'type': Syntax.IfStatement,
-                                'test': esprima.parse(handler[PARAM][NAME] + ' instanceof Resumable.PauseException').body[0].expression,
+                                'test': acorn.parse(handler[PARAM][NAME] + ' instanceof Resumable.PauseException').body[0].expression,
                                 'consequent': {
                                     'type': Syntax.BlockStatement,
                                     'body': [
@@ -80,7 +80,7 @@ _.extend(TryStatementTranspiler.prototype, {
                             catchClauseBlockContext.getSwitchStatement()
                         ]
                     }
-                });
+                };
 
                 functionContext.addCatch({
                     tryStartIndex: tryStartIndex,
@@ -93,7 +93,7 @@ _.extend(TryStatementTranspiler.prototype, {
                     'type': Syntax.Identifier,
                     'name': catchParameter
                 });
-            });
+            }());
         }
 
         tryNode = {
@@ -106,8 +106,8 @@ _.extend(TryStatementTranspiler.prototype, {
             }
         };
 
-        if (node[HANDLERS]) {
-            tryNode[HANDLERS] = handlers;
+        if (handler) {
+            tryNode[HANDLER] = resultHandler;
         }
 
         if (node[FINALIZER]) {

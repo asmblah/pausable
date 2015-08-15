@@ -10,7 +10,7 @@
 'use strict';
 
 var _ = require('lodash'),
-    esprima = require('esprima'),
+    acorn = require('acorn'),
     estraverse = require('estraverse'),
     DECLARATIONS = 'declarations',
     ID = 'id',
@@ -88,12 +88,12 @@ _.extend(FunctionContext.prototype, {
     getStatements: function (switchStatement) {
         var assignmentProperties = [],
             catchesProperties,
-            declaration = esprima.parse('var statementIndex = 0;').body[0],
+            declaration = acorn.parse('var statementIndex = 0;').body[0],
             functionContext = this,
             index,
             statements = [],
             stateProperties = [],
-            stateSetup = esprima.parse('if (Resumable._resumeState_) { statementIndex = Resumable._resumeState_.statementIndex; }').body[0];
+            stateSetup = acorn.parse('if (Resumable._resumeState_) { statementIndex = Resumable._resumeState_.statementIndex; }').body[0];
 
         _.each(functionContext.variables, function (name) {
             declaration[DECLARATIONS].push({
@@ -221,12 +221,12 @@ _.extend(FunctionContext.prototype, {
                         'type': Syntax.Identifier,
                         'name': 'temp' + index,
                     },
-                    'right': esprima.parse('Resumable._resumeState_.temp' + index).body[0].expression
+                    'right': acorn.parse('Resumable._resumeState_.temp' + index).body[0].expression
                 }
             });
         }
 
-        stateSetup.consequent.body.push(esprima.parse('Resumable._resumeState_ = null;').body[0]);
+        stateSetup.consequent.body.push(acorn.parse('Resumable._resumeState_ = null;').body[0]);
 
         _.forOwn(functionContext.assignmentVariables, function (variableName, statementIndex) {
             assignmentProperties.push({
@@ -286,7 +286,7 @@ _.extend(FunctionContext.prototype, {
                                             body: [
                                                 {
                                                     type: Syntax.IfStatement,
-                                                    test: esprima.parse('e instanceof Resumable.PauseException').body[0].expression,
+                                                    test: acorn.parse('e instanceof Resumable.PauseException').body[0].expression,
                                                     consequent: {
                                                         type: Syntax.BlockStatement,
                                                         body: [

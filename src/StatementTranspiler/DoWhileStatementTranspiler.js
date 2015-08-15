@@ -10,7 +10,7 @@
 'use strict';
 
 var _ = require('lodash'),
-    esprima = require('esprima'),
+    acorn = require('acorn'),
     estraverse = require('estraverse'),
     BlockContext = require('../BlockContext'),
     BODY = 'body',
@@ -72,7 +72,7 @@ _.extend(DoWhileStatementTranspiler.prototype, {
             'body': {
                 'type': Syntax.BlockStatement,
                 'body': [
-                    esprima.parse('statementIndex = ' + (statement.getIndex() + 1) + ';').body[0],
+                    acorn.parse('statementIndex = ' + (statement.getIndex() + 1) + ';').body[0],
                     ownBlockContext.getSwitchStatement()
                 ]
             }

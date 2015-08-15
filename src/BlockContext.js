@@ -10,7 +10,7 @@
 'use strict';
 
 var _ = require('lodash'),
-    esprima = require('esprima'),
+    acorn = require('acorn'),
     estraverse = require('estraverse'),
     CONSEQUENT = 'consequent',
     Syntax = estraverse.Syntax;
@@ -168,7 +168,7 @@ _.extend(BlockContext.prototype, {
                             value: i
                         },
                         consequent: i === index ? [
-                            esprima.parse('statementIndex = ' + (index + 1) + ';').body[0]
+                            acorn.parse('statementIndex = ' + (index + 1) + ';').body[0]
                         ] : []
                     });
                 }
@@ -210,7 +210,7 @@ function createSwitchCase(statementNode, index, nextIndex) {
         },
         consequent: [
             statementNode,
-            esprima.parse('statementIndex = ' + nextIndex + ';').body[0]
+            acorn.parse('statementIndex = ' + nextIndex + ';').body[0]
         ]
     };
 }

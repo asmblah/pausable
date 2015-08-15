@@ -10,7 +10,7 @@
 'use strict';
 
 var escodegen = require('escodegen'),
-    esprima = require('esprima'),
+    acorn = require('acorn'),
     expect = require('chai').expect,
     nowdoc = require('nowdoc'),
     Transpiler = require('../../../src/Transpiler');
@@ -97,7 +97,7 @@ EOS
 });
 EOS
 */;}), // jshint ignore:line
-            ast = esprima.parse(inputJS);
+            ast = acorn.parse(inputJS);
 
         ast = transpiler.transpile(ast);
 
@@ -197,7 +197,7 @@ EOS
 });
 EOS
 */;}), // jshint ignore:line
-            ast = esprima.parse(inputJS);
+            ast = acorn.parse(inputJS);
 
         ast = transpiler.transpile(ast);
 

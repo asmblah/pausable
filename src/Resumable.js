@@ -11,7 +11,7 @@
 
 var _ = require('lodash'),
     escodegen = require('escodegen'),
-    esprima = require('esprima'),
+    acorn = require('acorn'),
     PauseException = require('./PauseException'),
     Promise = require('./Promise'),
     FROM = 'from',
@@ -47,6 +47,22 @@ _.extend(Resumable.prototype, {
         promise.resolve(result);
 
         return promise;
+    },
+
+    callSync: function (func, args, thisObj) {
+        var result;
+
+        try {
+            result = func.apply(thisObj, args);
+        } catch (e) {
+            if (e instanceof PauseException) {
+                throw new Error('Resumable.callSync() :: Main thread must not pause');
+            }
+
+            throw e;
+        }
+
+        return result;
     },
 
     createPause: function () {
@@ -126,7 +142,7 @@ _.extend(Resumable.prototype, {
     },
 
     execute: function (code, options) {
-        var ast = esprima.parse(code),
+        var ast = acorn.parse(code),
             expose,
             func,
             names = ['Resumable'],
@@ -157,6 +173,41 @@ _.extend(Resumable.prototype, {
         func = new Function(names, 'return ' + transpiledCode);
 
         return resumable.call(func.apply(null, values), [], null);
+    },
+
+    executeSync: function (args, fn, options) {
+        var code = 'return ' + fn.toString(),
+            ast = acorn.parse(code, {'allowReturnOutsideFunction': true}),
+            expose,
+            func,
+            names = ['Resumable'],
+            resumable = this,
+            transpiledCode,
+            values = [Resumable];
+
+        options = options || {};
+        expose = options.expose || {};
+
+        _.forOwn(expose, function (value, name) {
+            names.push(name);
+            values.push(value);
+        });
+
+        ast = resumable.transpiler.transpile(ast);
+
+        transpiledCode = escodegen.generate(ast, {
+            format: {
+                indent: {
+                    style: '    ',
+                    base: 0
+                }
+            }
+        });
+
+        /*jshint evil:true */
+        func = new Function(names, 'return ' + transpiledCode);
+
+        return resumable.callSync(func.apply(null, values)(), args, null);
     }
 });
 
