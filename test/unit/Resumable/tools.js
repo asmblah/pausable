@@ -15,7 +15,8 @@ var _ = require('lodash'),
 module.exports = {
     check: function (scenario, description) {
         describe(description, function () {
-            var exports;
+            var exports,
+                result;
 
             beforeEach(function (done) {
                 var expose;
@@ -25,6 +26,7 @@ module.exports = {
                 this.resumable = new Resumable(new Transpiler());
 
                 exports = {};
+                result = undefined;
                 expose = {
                     exports: exports
                 };
@@ -37,7 +39,8 @@ module.exports = {
                     });
                 }
 
-                this.resumable.execute(scenario.code, {expose: expose}).done(function () {
+                this.resumable.execute(scenario.code, {expose: expose}).done(function (theResult) {
+                    result = theResult;
                     this.resolved = true;
                     done();
                 }.bind(this)).fail(function (e) {
@@ -47,11 +50,17 @@ module.exports = {
                 }.bind(this));
             });
 
-            if (scenario.expectedExports) {
+            if (scenario.hasOwnProperty('expectedResult')) {
                 it('should resolve the promise with the correct result', function () {
+                    expect(result).to.deep.equal(scenario.expectedResult);
+                });
+            }
+
+            if (scenario.expectedExports) {
+                it('should leave the exports object in the correct state', function () {
                     expect(exports).to.deep.equal(scenario.expectedExports);
                 });
-            } else {
+            } else if (!scenario.hasOwnProperty('expectedResult')) {
                 it('should reject the promise with the correct error', function () {
                     expect(this.error).not.to.be.null;
                     expect(this.error.toString()).to.equal(scenario.expectedError.toString());

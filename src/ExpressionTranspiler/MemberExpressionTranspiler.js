@@ -11,6 +11,7 @@
 
 var _ = require('lodash'),
     estraverse = require('estraverse'),
+    COMPUTED = 'computed',
     OBJECT = 'object',
     PROPERTY = 'property',
     TYPE = 'type',
@@ -29,12 +30,16 @@ _.extend(MemberExpressionTranspiler.prototype, {
     transpile: function (node, parent, functionContext, blockContext) {
         var memberExpression,
             object = this.expressionTranspiler.transpile(node[OBJECT], node, functionContext, blockContext),
+            property = node[COMPUTED] ?
+                this.expressionTranspiler.transpile(node[PROPERTY], node, functionContext, blockContext) :
+                node[PROPERTY],
             propertyTempName;
 
         memberExpression = {
             'type': Syntax.MemberExpression,
             'object': object,
-            'property': node[PROPERTY]
+            'property': property,
+            'computed': node[COMPUTED]
         };
 
         if (parent[TYPE] === Syntax.AssignmentExpression) {

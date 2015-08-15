@@ -142,7 +142,7 @@ _.extend(Resumable.prototype, {
     },
 
     execute: function (code, options) {
-        var ast = acorn.parse(code),
+        var ast = acorn.parse(code, {'allowReturnOutsideFunction': true}),
             expose,
             func,
             names = ['Resumable'],
