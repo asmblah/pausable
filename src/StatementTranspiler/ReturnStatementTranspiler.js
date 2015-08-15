@@ -27,7 +27,9 @@ _.extend(ReturnStatementTranspiler.prototype, {
     },
 
     transpile: function (node, parent, functionContext, blockContext) {
-        var expression = this.expressionTranspiler.transpile(node[ARGUMENT], node, functionContext, blockContext);
+        var expression = node[ARGUMENT] ?
+            this.expressionTranspiler.transpile(node[ARGUMENT], node, functionContext, blockContext) :
+            null;
 
         blockContext.prepareStatement().assign({
             'type': Syntax.ReturnStatement,

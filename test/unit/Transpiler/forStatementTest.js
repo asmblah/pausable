@@ -94,7 +94,7 @@ EOS
 });
 EOS
 */;}), // jshint ignore:line
-            ast = acorn.parse(inputJS);
+            ast = acorn.parse(inputJS, {'allowReturnOutsideFunction': true});
 
         ast = transpiler.transpile(ast);
 
@@ -236,7 +236,7 @@ EOS
 });
 EOS
 */;}), // jshint ignore:line
-            ast = acorn.parse(inputJS);
+            ast = acorn.parse(inputJS, {'allowReturnOutsideFunction': true});
 
         ast = transpiler.transpile(ast);
 
@@ -481,7 +481,7 @@ EOS
 });
 EOS
 */;}), // jshint ignore:line
-            ast = acorn.parse(inputJS);
+            ast = acorn.parse(inputJS, {'allowReturnOutsideFunction': true});
 
         ast = transpiler.transpile(ast);
 
