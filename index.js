@@ -12,8 +12,4 @@
 var Resumable = require('./src/Resumable'),
     Transpiler = require('./src/Transpiler');
 
-module.exports = {
-    create: function () {
-        return new Resumable(new Transpiler());
-    }
-};
+module.exports = new Resumable(new Transpiler());
