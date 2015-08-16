@@ -77,6 +77,52 @@ _.extend(TryStatementTranspiler.prototype, {
                                     ]
                                 }
                             },
+                            {
+                                'type': Syntax.IfStatement,
+                                'test': acorn.parse(handler[PARAM][NAME] + ' instanceof Resumable.ResumeException').body[0].expression,
+                                'consequent': {
+                                    'type': Syntax.BlockStatement,
+                                    'body': [
+                                        {
+                                            'type': Syntax.ExpressionStatement,
+                                            'expression': {
+                                                'type': Syntax.AssignmentExpression,
+                                                'operator': '=',
+                                                'left': handler[PARAM],
+                                                'right': {
+                                                    'type': Syntax.MemberExpression,
+                                                    'object': handler[PARAM],
+                                                    'property': {
+                                                        'type': Syntax.Identifer,
+                                                        'name': 'error'
+                                                    },
+                                                    'computed': false
+                                                }
+                                            }
+                                        }
+                                    ]
+                                },
+                                'alternate': {
+                                    'type': Syntax.BlockStatement,
+                                    'body': [
+                                        {
+                                            'type': Syntax.ExpressionStatement,
+                                            'expression': {
+                                                'type': Syntax.AssignmentExpression,
+                                                'operator': '=',
+                                                'left': {
+                                                    'type': Syntax.Identifier,
+                                                    'name': 'statementIndex'
+                                                },
+                                                'right': {
+                                                    'type': Syntax.Literal,
+                                                    'value': catchStatementIndex
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
                             catchClauseBlockContext.getSwitchStatement()
                         ]
                     }

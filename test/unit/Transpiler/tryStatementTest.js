@@ -58,11 +58,16 @@ EOS
                         statementIndex = 3;
                         break;
                     case 3:
-                        throw temp0;
+                        throw new Resumable.ResumeException(temp0);
                     }
                 } catch (e) {
                     if (e instanceof Resumable.PauseException) {
                         throw e;
+                    }
+                    if (e instanceof Resumable.ResumeException) {
+                        e = e.error;
+                    } else {
+                        statementIndex = 3;
                     }
                     switch (statementIndex) {
                     case 3:
@@ -155,11 +160,16 @@ EOS
                         break;
                     case 4:
                     case 5:
-                        throw temp0;
+                        throw new Resumable.ResumeException(temp0);
                     }
                 } catch (e) {
                     if (e instanceof Resumable.PauseException) {
                         throw e;
+                    }
+                    if (e instanceof Resumable.ResumeException) {
+                        e = e.error;
+                    } else {
+                        statementIndex = 4;
                     }
                     switch (statementIndex) {
                     case 4:

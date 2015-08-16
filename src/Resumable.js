@@ -14,6 +14,7 @@ var _ = require('lodash'),
     acorn = require('acorn'),
     PauseException = require('./PauseException'),
     Promise = require('./Promise'),
+    ResumeException = require('./ResumeException'),
     FROM = 'from',
     PARAM = 'param',
     TO = 'to';
@@ -24,7 +25,8 @@ function Resumable(transpiler) {
 
 _.extend(Resumable, {
     _resumeState_: null,
-    PauseException: PauseException
+    PauseException: PauseException,
+    ResumeException: ResumeException
 });
 
 _.extend(Resumable.prototype, {

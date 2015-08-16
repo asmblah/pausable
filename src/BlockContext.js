@@ -95,7 +95,22 @@ _.extend(BlockContext.prototype, {
                     'consequent': [
                         {
                             'type': Syntax.ThrowStatement,
-                            'argument': expressionNode
+                            'argument': {
+                                'type': Syntax.NewExpression,
+                                'callee': {
+                                    'type': Syntax.MemberExpression,
+                                    'object': {
+                                        'type': Syntax.Identifier,
+                                        'name': 'Resumable'
+                                    },
+                                    'property': {
+                                        'type': Syntax.Identifier,
+                                        'name': 'ResumeException'
+                                    },
+                                    'computed': false
+                                },
+                                'arguments': [expressionNode]
+                            }
                         }
                     ]
                 };

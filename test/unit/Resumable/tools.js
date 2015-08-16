@@ -56,14 +56,20 @@ module.exports = {
                 });
             }
 
-            if (scenario.expectedExports) {
+            if (scenario.hasOwnProperty('expectedExports')) {
                 it('should leave the exports object in the correct state', function () {
                     expect(exports).to.deep.equal(scenario.expectedExports);
                 });
-            } else if (!scenario.hasOwnProperty('expectedResult')) {
+            }
+
+            if (scenario.hasOwnProperty('expectedError')) {
                 it('should reject the promise with the correct error', function () {
                     expect(this.error).not.to.be.null;
                     expect(this.error.toString()).to.equal(scenario.expectedError.toString());
+                });
+            } else {
+                it('should not reject the promise', function () {
+                    expect(this.error).to.be.null;
                 });
             }
 
