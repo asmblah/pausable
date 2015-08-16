@@ -1,6 +1,6 @@
 {
   "name": "pausable",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Pause and resume JavaScript code",
   "main": "index.js",
   "scripts": {
