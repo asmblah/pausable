@@ -97,6 +97,106 @@ EOS
                 second: true,
                 third: true
             }
+        },
+        'try with both catch and finally blocks when an error is thrown': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = true;
+try {
+    exports.second = true;
+    throw 'jump';
+    exports.third = true;
+} catch (error) {
+    exports.fourth = error;
+} finally {
+    exports.fifth = true;
+}
+exports.sixth = true;
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedExports: {
+                first: true,
+                second: true,
+                fourth: 'jump',
+                fifth: true,
+                sixth: true
+            }
+        },
+        'try with both catch and finally blocks when no error is thrown': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = giveMeAsync(1);
+try {
+    exports.second = giveMeAsync(2);
+} catch (error) {
+    exports.third = giveMeAsync(3);
+} finally {
+    exports.fourth = giveMeAsync(4);
+}
+exports.fifth = giveMeAsync(5);
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedExports: {
+                first: 1,
+                second: 2,
+                fourth: 4,
+                fifth: 5
+            }
+        },
+        'try with only finally block when no error is thrown': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = giveMeAsync(1);
+try {
+    exports.second = giveMeAsync(2);
+} finally {
+    exports.third = giveMeAsync(3);
+}
+exports.fourth = giveMeAsync(4);
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedExports: {
+                first: 1,
+                second: 2,
+                third: 3,
+                fourth: 4
+            }
         }
     }, tools.check);
 });

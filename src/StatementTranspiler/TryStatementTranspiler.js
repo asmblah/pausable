@@ -32,10 +32,11 @@ _.extend(TryStatementTranspiler.prototype, {
     },
 
     transpile: function (node, parent, functionContext, blockContext) {
-        var catchStatementIndex,
+        var catchStatementIndex = null,
             catchStatements = [],
             handler = node[HANDLER],
             hasCatch = handler && handler[BODY][BODY].length > 0,
+            finalizer = node[FINALIZER],
             ownBlockContext = new BlockContext(functionContext),
             statement,
             transpiler = this,
@@ -133,31 +134,64 @@ _.extend(TryStatementTranspiler.prototype, {
             }
         };
 
-        tryNode[HANDLER] = {
-            'type': Syntax.CatchClause,
-            'param': handler[PARAM],
-            'body': {
-                'type': Syntax.BlockStatement,
-                'body': [
-                    {
+        if (handler) {
+            tryNode[HANDLER] = {
+                'type': Syntax.CatchClause,
+                'param': handler[PARAM],
+                'body': {
+                    'type': Syntax.BlockStatement,
+                    'body': [
+                        {
+                            'type': Syntax.IfStatement,
+                            'test': acorn.parse(handler[PARAM][NAME] + ' instanceof Resumable.PauseException').body[0].expression,
+                            'consequent': {
+                                'type': Syntax.BlockStatement,
+                                'body': [
+                                    {
+                                        'type': Syntax.ThrowStatement,
+                                        'argument': handler[PARAM]
+                                    }
+                                ]
+                            }
+                        }
+                    ].concat(catchStatements)
+                }
+            };
+        }
+
+        if (finalizer) {
+            (function () {
+                var finallyClauseBlockContext = new BlockContext(functionContext),
+                    finallyClauseStatementIndex = functionContext.getCurrentStatementIndex();
+
+                transpiler.statementTranspiler.transpileArray(
+                    finalizer[BODY],
+                    finalizer,
+                    functionContext,
+                    finallyClauseBlockContext
+                );
+
+                // Jump over the catch block if present to the finalizer
+                if (catchStatementIndex !== null) {
+                    tryNode[BLOCK][BODY].push({
                         'type': Syntax.IfStatement,
-                        'test': acorn.parse(handler[PARAM][NAME] + ' instanceof Resumable.PauseException').body[0].expression,
+                        'test': acorn.parse('statementIndex === ' + catchStatementIndex).body[0].expression,
                         'consequent': {
                             'type': Syntax.BlockStatement,
                             'body': [
-                                {
-                                    'type': Syntax.ThrowStatement,
-                                    'argument': handler[PARAM]
-                                }
+                                acorn.parse('statementIndex = ' + finallyClauseStatementIndex + ';').body[0]
                             ]
                         }
-                    }
-                ].concat(catchStatements)
-            }
-        };
+                    });
+                }
 
-        if (node[FINALIZER]) {
-            tryNode[FINALIZER] = node[FINALIZER];
+                tryNode[FINALIZER] = {
+                    'type': Syntax.BlockStatement,
+                    'body': [
+                        finallyClauseBlockContext.getSwitchStatement()
+                    ]
+                };
+            }());
         }
 
         statement.assign(tryNode);
