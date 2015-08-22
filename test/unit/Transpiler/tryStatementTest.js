@@ -220,4 +220,74 @@ EOS
             }
         })).to.equal(expectedOutputJS);
     });
+
+    it('should correctly transpile when catch is empty', function () {
+        var inputJS = nowdoc(function () {/*<<<EOS
+a = 1;
+try {
+    b = 2;
+} catch (e) {
+}
+c = 3;
+EOS
+*/;}), // jshint ignore:line
+            expectedOutputJS = nowdoc(function () {/*<<<EOS
+(function () {
+    var statementIndex = 0;
+    return function resumableScope() {
+        if (Resumable._resumeState_) {
+            statementIndex = Resumable._resumeState_.statementIndex;
+            Resumable._resumeState_ = null;
+        }
+        try {
+            switch (statementIndex) {
+            case 0:
+                a = 1;
+                statementIndex = 1;
+            case 1:
+                statementIndex = 2;
+            case 2:
+                try {
+                    switch (statementIndex) {
+                    case 2:
+                        b = 2;
+                        statementIndex = 3;
+                    }
+                } catch (e) {
+                    if (e instanceof Resumable.PauseException) {
+                        throw e;
+                    }
+                }
+                statementIndex = 3;
+            case 3:
+                c = 3;
+                statementIndex = 4;
+            }
+        } catch (e) {
+            if (e instanceof Resumable.PauseException) {
+                e.add({
+                    func: resumableScope,
+                    statementIndex: statementIndex + 1,
+                    assignments: {}
+                });
+            }
+            throw e;
+        }
+    }.call(this);
+});
+EOS
+*/;}), // jshint ignore:line
+            ast = acorn.parse(inputJS, {'allowReturnOutsideFunction': true});
+
+        ast = transpiler.transpile(ast);
+
+        expect(escodegen.generate(ast, {
+            format: {
+                indent: {
+                    style: '    ',
+                    base: 0
+                }
+            }
+        })).to.equal(expectedOutputJS);
+    });
 });

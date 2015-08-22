@@ -33,9 +33,10 @@ _.extend(TryStatementTranspiler.prototype, {
 
     transpile: function (node, parent, functionContext, blockContext) {
         var catchStatementIndex,
+            catchStatements = [],
             handler = node[HANDLER],
+            hasCatch = handler && handler[BODY][BODY].length > 0,
             ownBlockContext = new BlockContext(functionContext),
-            resultHandler = null,
             statement,
             transpiler = this,
             tryEndIndex,
@@ -48,7 +49,7 @@ _.extend(TryStatementTranspiler.prototype, {
         transpiler.statementTranspiler.transpileArray(node[BLOCK][BODY], node, functionContext, ownBlockContext);
         tryEndIndex = functionContext.getCurrentStatementIndex();
 
-        if (handler) {
+        if (hasCatch) {
             catchStatementIndex = functionContext.getCurrentStatementIndex();
 
             (function () {
@@ -58,75 +59,55 @@ _.extend(TryStatementTranspiler.prototype, {
 
                 transpiler.statementTranspiler.transpileArray(handler[BODY][BODY], handler, functionContext, catchClauseBlockContext);
 
-                resultHandler = {
-                    'type': Syntax.CatchClause,
-                    'param': handler[PARAM],
-                    'body': {
-                        'type': Syntax.BlockStatement,
-                        'body': [
-                            {
-                                'type': Syntax.IfStatement,
-                                'test': acorn.parse(handler[PARAM][NAME] + ' instanceof Resumable.PauseException').body[0].expression,
-                                'consequent': {
-                                    'type': Syntax.BlockStatement,
-                                    'body': [
-                                        {
-                                            'type': Syntax.ThrowStatement,
-                                            'argument': handler[PARAM]
+                catchStatements.push(
+                    {
+                        'type': Syntax.IfStatement,
+                        'test': acorn.parse(handler[PARAM][NAME] + ' instanceof Resumable.ResumeException').body[0].expression,
+                        'consequent': {
+                            'type': Syntax.BlockStatement,
+                            'body': [
+                                {
+                                    'type': Syntax.ExpressionStatement,
+                                    'expression': {
+                                        'type': Syntax.AssignmentExpression,
+                                        'operator': '=',
+                                        'left': handler[PARAM],
+                                        'right': {
+                                            'type': Syntax.MemberExpression,
+                                            'object': handler[PARAM],
+                                            'property': {
+                                                'type': Syntax.Identifer,
+                                                'name': 'error'
+                                            },
+                                            'computed': false
                                         }
-                                    ]
+                                    }
                                 }
-                            },
-                            {
-                                'type': Syntax.IfStatement,
-                                'test': acorn.parse(handler[PARAM][NAME] + ' instanceof Resumable.ResumeException').body[0].expression,
-                                'consequent': {
-                                    'type': Syntax.BlockStatement,
-                                    'body': [
-                                        {
-                                            'type': Syntax.ExpressionStatement,
-                                            'expression': {
-                                                'type': Syntax.AssignmentExpression,
-                                                'operator': '=',
-                                                'left': handler[PARAM],
-                                                'right': {
-                                                    'type': Syntax.MemberExpression,
-                                                    'object': handler[PARAM],
-                                                    'property': {
-                                                        'type': Syntax.Identifer,
-                                                        'name': 'error'
-                                                    },
-                                                    'computed': false
-                                                }
-                                            }
+                            ]
+                        },
+                        'alternate': {
+                            'type': Syntax.BlockStatement,
+                            'body': [
+                                {
+                                    'type': Syntax.ExpressionStatement,
+                                    'expression': {
+                                        'type': Syntax.AssignmentExpression,
+                                        'operator': '=',
+                                        'left': {
+                                            'type': Syntax.Identifier,
+                                            'name': 'statementIndex'
+                                        },
+                                        'right': {
+                                            'type': Syntax.Literal,
+                                            'value': catchStatementIndex
                                         }
-                                    ]
-                                },
-                                'alternate': {
-                                    'type': Syntax.BlockStatement,
-                                    'body': [
-                                        {
-                                            'type': Syntax.ExpressionStatement,
-                                            'expression': {
-                                                'type': Syntax.AssignmentExpression,
-                                                'operator': '=',
-                                                'left': {
-                                                    'type': Syntax.Identifier,
-                                                    'name': 'statementIndex'
-                                                },
-                                                'right': {
-                                                    'type': Syntax.Literal,
-                                                    'value': catchStatementIndex
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    }
                                 }
-                            },
-                            catchClauseBlockContext.getSwitchStatement()
-                        ]
-                    }
-                };
+                            ]
+                        }
+                    },
+                    catchClauseBlockContext.getSwitchStatement()
+                );
 
                 functionContext.addCatch({
                     tryStartIndex: tryStartIndex,
@@ -152,9 +133,28 @@ _.extend(TryStatementTranspiler.prototype, {
             }
         };
 
-        if (handler) {
-            tryNode[HANDLER] = resultHandler;
-        }
+        tryNode[HANDLER] = {
+            'type': Syntax.CatchClause,
+            'param': handler[PARAM],
+            'body': {
+                'type': Syntax.BlockStatement,
+                'body': [
+                    {
+                        'type': Syntax.IfStatement,
+                        'test': acorn.parse(handler[PARAM][NAME] + ' instanceof Resumable.PauseException').body[0].expression,
+                        'consequent': {
+                            'type': Syntax.BlockStatement,
+                            'body': [
+                                {
+                                    'type': Syntax.ThrowStatement,
+                                    'argument': handler[PARAM]
+                                }
+                            ]
+                        }
+                    }
+                ].concat(catchStatements)
+            }
+        };
 
         if (node[FINALIZER]) {
             tryNode[FINALIZER] = node[FINALIZER];

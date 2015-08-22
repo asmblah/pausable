@@ -68,6 +68,35 @@ EOS
                 fourth: true,
                 fifth: true
             }
+        },
+        'empty catch block when no error is thrown': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = true;
+try {
+    exports.second = true;
+} catch (error) {
+}
+exports.third = true;
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedExports: {
+                first: true,
+                second: true,
+                third: true
+            }
         }
     }, tools.check);
 });
