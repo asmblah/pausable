@@ -115,8 +115,14 @@ _.extend(Resumable.prototype, {
                     }
                 }
 
-                for (; i < states.length; i++) {
+                function handleNextState() {
+                    if (i === states.length) {
+                        promise.resolve(lastResult);
+                        return;
+                    }
+
                     state = states[i];
+                    i++;
 
                     if (state.assignments[state.statementIndex - 1]) {
                         state[state.assignments[state.statementIndex - 1]] = lastResult;
@@ -128,16 +134,25 @@ _.extend(Resumable.prototype, {
                         lastResult = state.func();
                     } catch (e) {
                         if (e instanceof PauseException) {
-                            e.setPromise(promise);
+                            e.setPromise(
+                                new Promise().done(function (result) {
+                                    lastResult = result;
+                                    handleNextState();
+                                }).fail(function (error) {
+                                    promise.reject(error);
+                                })
+                            );
 
                             return;
                         }
 
                         throw e;
                     }
+
+                    handleNextState();
                 }
 
-                promise.resolve(lastResult);
+                handleNextState();
             });
 
         return pause;
