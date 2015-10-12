@@ -106,21 +106,6 @@ _.extend(FunctionContext.prototype, {
             });
         });
 
-        _.each(functionContext.parameters.concat(functionContext.variables), function (name) {
-            stateProperties.push({
-                'type': Syntax.Property,
-                'kind': 'init',
-                'key': {
-                    'type': Syntax.Identifier,
-                    'name': name
-                },
-                'value': {
-                    'type': Syntax.Identifier,
-                    'name': name
-                }
-            });
-        });
-
         if (functionContext.catches.length > 0) {
             catchesProperties = [];
             _.each(functionContext.catches, function (catchData) {

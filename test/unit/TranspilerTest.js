@@ -171,10 +171,7 @@ EOS
                     e.add({
                         func: resumableScope,
                         statementIndex: statementIndex + 1,
-                        assignments: {},
-                        num1: num1,
-                        num2: num2,
-                        num3: num3
+                        assignments: {}
                     });
                 }
                 throw e;
@@ -277,9 +274,6 @@ EOS
                         func: resumableScope,
                         statementIndex: statementIndex + 1,
                         assignments: { '1': 'temp0' },
-                        num1: num1,
-                        num2: num2,
-                        num3: num3,
                         temp0: temp0
                     });
                 }
@@ -1434,7 +1428,6 @@ EOS
                         '1': 'temp0',
                         '2': 'temp1'
                     },
-                    obj: obj,
                     temp0: temp0,
                     temp1: temp1
                 });
@@ -1637,8 +1630,6 @@ EOS
                         '1': 'temp0',
                         '2': 'temp1'
                     },
-                    myFirstVar: myFirstVar,
-                    mySecondVar: mySecondVar,
                     temp0: temp0,
                     temp1: temp1
                 });
