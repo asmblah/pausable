@@ -237,6 +237,10 @@ _.extend(FunctionContext.prototype, {
                 arguments: [
                     {
                         type: Syntax.ThisExpression
+                    },
+                    {
+                        type: Syntax.Identifier,
+                        name: 'arguments'
                     }
                 ],
                 callee: {
@@ -363,7 +367,7 @@ _.extend(FunctionContext.prototype, {
                     },
                     property: {
                         type: Syntax.Identifier,
-                        name: 'call'
+                        name: 'apply'
                     }
                 }
             }

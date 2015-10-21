@@ -168,7 +168,7 @@ EOS
             }
             throw e;
         }
-    }.call(this);
+    }.apply(this, arguments);
 });
 EOS
 */;}), // jshint ignore:line
@@ -332,7 +332,7 @@ EOS
             }
             throw e;
         }
-    }.call(this);
+    }.apply(this, arguments);
 });
 EOS
 */;}), // jshint ignore:line
