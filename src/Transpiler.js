@@ -10,8 +10,6 @@
 'use strict';
 
 var _ = require('lodash'),
-    escodegen = require('escodegen'),
-    acorn = require('acorn'),
     estraverse = estraverse,
     ArrayExpressionTranspiler = require('./ExpressionTranspiler/ArrayExpressionTranspiler'),
     AssignmentExpressionTranspiler = require('./ExpressionTranspiler/AssignmentExpressionTranspiler'),

@@ -7,6 +7,8 @@
  * https://github.com/asmblah/pausable/raw/master/MIT-LICENSE.txt
  */
 
+'use strict';
+
 var _ = require('lodash'),
     expect = require('chai').expect,
     Resumable = require('../../../src/Resumable'),

@@ -13,7 +13,24 @@ var _ = require('lodash'),
     acorn = require('acorn'),
     estraverse = require('estraverse'),
     CONSEQUENT = 'consequent',
-    Syntax = estraverse.Syntax;
+    Syntax = estraverse.Syntax,
+    createSwitchCase = function createSwitchCase(statementNode, index, nextIndex) {
+        if (!nextIndex) {
+            nextIndex = index + 1;
+        }
+
+        return {
+            type: Syntax.SwitchCase,
+            test: {
+                type: Syntax.Literal,
+                value: index
+            },
+            consequent: [
+                statementNode,
+                acorn.parse('statementIndex = ' + nextIndex + ';').body[0]
+            ]
+        };
+    };
 
 function BlockContext(functionContext) {
     this.functionContext = functionContext;
@@ -211,23 +228,5 @@ _.extend(BlockContext.prototype, {
         this.transformNext = transformer;
     }
 });
-
-function createSwitchCase(statementNode, index, nextIndex) {
-    if (!nextIndex) {
-        nextIndex = index + 1;
-    }
-
-    return {
-        type: Syntax.SwitchCase,
-        test: {
-            type: Syntax.Literal,
-            value: index
-        },
-        consequent: [
-            statementNode,
-            acorn.parse('statementIndex = ' + nextIndex + ';').body[0]
-        ]
-    };
-}
 
 module.exports = BlockContext;

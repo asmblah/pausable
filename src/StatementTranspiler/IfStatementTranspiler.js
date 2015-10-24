@@ -10,9 +10,7 @@
 'use strict';
 
 var _ = require('lodash'),
-    acorn = require('acorn'),
     estraverse = require('estraverse'),
-    BlockContext = require('../BlockContext'),
     ALTERNATE = 'alternate',
     CONSEQUENT = 'consequent',
     TEST = 'test',

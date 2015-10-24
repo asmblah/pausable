@@ -9,8 +9,7 @@
 
 'use strict';
 
-var _ = require('lodash'),
-    expect = require('chai').expect,
+var expect = require('chai').expect,
     nowdoc = require('nowdoc'),
     Resumable = require('../../../src/Resumable'),
     Transpiler = require('../../../src/Transpiler');
@@ -29,7 +28,7 @@ exports.myFunc = function () {
     return four + 2;
 };
 EOS
-*/;});
+*/;}); //jshint ignore:line
             this.exports = {};
 
             this.callExecute = function () {
@@ -77,7 +76,7 @@ exports.myFunc = function () {
     throwSomething('oh dear');
 };
 EOS
-*/;});
+*/;}); //jshint ignore:line
             this.exports = {};
 
             this.callExecute = function () {

@@ -9,9 +9,7 @@
 
 'use strict';
 
-var _ = require('lodash'),
-    expect = require('chai').expect,
-    nowdoc = require('nowdoc'),
+var expect = require('chai').expect,
     Resumable = require('../../../src/Resumable'),
     Transpiler = require('../../../src/Transpiler');
 
@@ -25,7 +23,7 @@ describe('Resumable.executeSync(...)', function () {
             this.args = [];
             this.fn = function testFn(whatToGive) {
                 var myFunc = function () {
-                    var four = giveMeAsync(whatToGive);
+                    var four = giveMeAsync(whatToGive); //jshint ignore:line
 
                     return four + 2;
                 };

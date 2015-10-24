@@ -4,7 +4,8 @@
   "description": "Pause and resume JavaScript code",
   "main": "index.js",
   "scripts": {
-    "test": "mocha -r test/harness ./test --recursive"
+    "jshint": "jshint .",
+    "test": "npm run jshint && mocha -r test/harness ./test --recursive"
   },
   "keywords": [
     "pause",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "chai": "^3.0.0",
+    "jshint": "^2.8.0",
     "mocha": "^2.3.3",
     "nowdoc": "^1.0.0",
     "sinon": "^1.17.2",

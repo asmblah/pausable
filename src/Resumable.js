@@ -74,6 +74,7 @@ _.extend(Resumable.prototype, {
                     state;
 
                 if (error) {
+                    /*jshint loopfunc: true */
                     for (; i < states.length; i++) {
                         state = states[i];
 

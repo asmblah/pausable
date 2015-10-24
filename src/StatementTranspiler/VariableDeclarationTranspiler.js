@@ -11,7 +11,6 @@
 
 var _ = require('lodash'),
     estraverse = require('estraverse'),
-    BlockContext = require('../BlockContext'),
     DECLARATIONS = 'declarations',
     ID = 'id',
     INIT = 'init',

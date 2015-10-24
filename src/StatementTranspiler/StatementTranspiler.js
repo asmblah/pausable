@@ -10,7 +10,6 @@
 'use strict';
 
 var _ = require('lodash'),
-    acorn = require('acorn'),
     estraverse = require('estraverse'),
     hasOwn = {}.hasOwnProperty,
     BlockContext = require('../BlockContext'),

@@ -10,9 +10,7 @@
 'use strict';
 
 var _ = require('lodash'),
-    expect = require('chai').expect,
     nowdoc = require('nowdoc'),
-    sinon = require('sinon'),
     tools = require('./tools');
 
 describe('Resumable member expression handling', function () {

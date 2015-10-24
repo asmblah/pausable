@@ -10,7 +10,6 @@
 'use strict';
 
 var _ = require('lodash'),
-    estraverse = require('estraverse'),
     TYPE = 'type',
     hasOwn = {}.hasOwnProperty;
 

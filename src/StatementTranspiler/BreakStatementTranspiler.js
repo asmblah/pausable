@@ -11,7 +11,6 @@
 
 var _ = require('lodash'),
     estraverse = require('estraverse'),
-    BlockContext = require('../BlockContext'),
     LABEL = 'label',
     Syntax = estraverse.Syntax;
 

@@ -12,7 +12,6 @@
 var escodegen = require('escodegen'),
     acorn = require('acorn'),
     expect = require('chai').expect,
-    nowdoc = require('nowdoc'),
     sinon = require('sinon'),
     Resumable = require('../../src/Resumable'),
     Transpiler = require('../../src/Transpiler');
