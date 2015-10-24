@@ -14,7 +14,8 @@ var _ = require('lodash'),
 
 function PauseException(resumer) {
     this.message = 'PauseException';
-    this.promise = null;
+    this.reject = null;
+    this.resolve = null;
     this.resumer = resumer;
     this.states = [];
 }
@@ -34,7 +35,7 @@ _.extend(PauseException.prototype, {
         var exception = this;
 
         try {
-            exception.resumer(exception.promise, null, result, exception.states);
+            exception.resumer(exception.resolve, exception.reject, null, result, exception.states);
         } catch (e) {
             // Just re-throw if another PauseException gets raised,
             // we're just looking for normal errors
@@ -43,19 +44,22 @@ _.extend(PauseException.prototype, {
             }
 
             // Reject the promise for the run with the error thrown
-            exception.promise.reject(e);
+            exception.reject(e);
         }
     },
 
-    setPromise: function (promise) {
-        this.promise = promise;
+    setPromise: function (resolve, reject) {
+        var exception = this;
+
+        exception.resolve = resolve;
+        exception.reject = reject;
     },
 
     throw: function (error) {
         var exception = this;
 
         try {
-            exception.resumer(exception.promise, error, null, exception.states);
+            exception.resumer(exception.resolve, exception.reject, error, null, exception.states);
         } catch (e) {
             // Just re-throw if another PauseException gets raised,
             // we're just looking for normal errors
@@ -64,7 +68,7 @@ _.extend(PauseException.prototype, {
             }
 
             // Reject the promise for the run with the error thrown
-            exception.promise.reject(e);
+            exception.reject(e);
         }
     }
 });

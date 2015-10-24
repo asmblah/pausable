@@ -12,7 +12,6 @@
 var _ = require('lodash'),
     expect = require('chai').expect,
     nowdoc = require('nowdoc'),
-    Promise = require('../../../src/Promise'),
     Resumable = require('../../../src/Resumable'),
     Transpiler = require('../../../src/Transpiler');
 
@@ -53,20 +52,20 @@ EOS
 
         describe('calling the exported function via Resumable.call(...)', function () {
             beforeEach(function (done) {
-                this.callExecute().done(function () {
+                this.callExecute().then(function () {
                     done();
-                }).fail(done);
+                }, done);
             });
 
             it('should return 6', function (done) {
-                this.resumable.call(this.exports.myFunc, [], null).done(function (result) {
+                this.resumable.call(this.exports.myFunc, [], null).then(function (result) {
                     try {
                         expect(result).to.equal(6);
                         done();
                     } catch (e) {
                         done(e);
                     }
-                }).fail(done);
+                }, done);
             });
         });
     });
@@ -101,15 +100,15 @@ EOS
 
         describe('calling the exported function via Resumable.call(...)', function () {
             beforeEach(function (done) {
-                this.callExecute().done(function () {
+                this.callExecute().then(function () {
                     done();
-                }).fail(done);
+                }, done);
             });
 
             it('should throw the expected error', function (done) {
-                this.resumable.call(this.exports.myFunc, [], null).done(function (result) {
+                this.resumable.call(this.exports.myFunc, [], null).then(function (result) {
                     done(new Error('Expected rejection but was resolved with "' + result + '"'));
-                }).fail(function (error) {
+                }, function (error) {
                     try {
                         expect(error.message).to.equal('oh dear');
                         done();

@@ -13,7 +13,7 @@ var escodegen = require('escodegen'),
     acorn = require('acorn'),
     expect = require('chai').expect,
     nowdoc = require('nowdoc'),
-    Transpiler = require('../../src/Transpiler')
+    Transpiler = require('../../../src/Transpiler');
 
 describe('Resumable Transpiler', function () {
     var transpiler;

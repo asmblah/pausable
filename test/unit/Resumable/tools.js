@@ -39,11 +39,11 @@ module.exports = {
                     });
                 }
 
-                this.resumable.execute(scenario.code, {expose: expose}).done(function (theResult) {
+                this.resumable.execute(scenario.code, {expose: expose}).then(function (theResult) {
                     result = theResult;
                     this.resolved = true;
                     done();
-                }.bind(this)).fail(function (e) {
+                }.bind(this), function (e) {
                     this.resolved = false;
                     this.error = e;
                     done();

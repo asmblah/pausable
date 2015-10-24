@@ -12,7 +12,6 @@
 var _ = require('lodash'),
     expect = require('chai').expect,
     nowdoc = require('nowdoc'),
-    Promise = require('../../../src/Promise'),
     Resumable = require('../../../src/Resumable'),
     Transpiler = require('../../../src/Transpiler');
 
@@ -58,14 +57,14 @@ describe('Resumable.executeSync(...)', function () {
         it('should return 12 when the exported function is called via Resumable.call(...)', function (done) {
             this.args[0] = 10;
 
-            this.resumable.call(this.callExecute(), [], null).done(function (result) {
+            this.resumable.call(this.callExecute(), [], null).then(function (result) {
                 try {
                     expect(result).to.equal(12);
                     done();
                 } catch (e) {
                     done(e);
                 }
-            }).fail(done);
+            }, done);
         });
     });
 });

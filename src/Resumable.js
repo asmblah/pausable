@@ -13,10 +13,11 @@ var _ = require('lodash'),
     escodegen = require('escodegen'),
     acorn = require('acorn'),
     PauseException = require('./PauseException'),
-    Promise = require('./Promise'),
+    Promise = require('bluebird'),
     ResumeException = require('./ResumeException'),
     FROM = 'from',
     PARAM = 'param',
+    STRICT = 'strict',
     TO = 'to';
 
 function Resumable(transpiler) {
@@ -31,24 +32,23 @@ _.extend(Resumable, {
 
 _.extend(Resumable.prototype, {
     call: function (func, args, thisObj) {
-        var promise = new Promise(),
-            result;
+        return new Promise(function (resolve, reject) {
+            var result;
 
-        try {
-            result = func.apply(thisObj, args);
-        } catch (e) {
-            if (e instanceof PauseException) {
-                e.setPromise(promise);
-            } else {
-                promise.reject(e);
+            try {
+                result = func.apply(thisObj, args);
+            } catch (e) {
+                if (e instanceof PauseException) {
+                    e.setPromise(resolve, reject);
+                } else {
+                    reject(e);
+                }
+
+                return;
             }
 
-            return promise;
-        }
-
-        promise.resolve(result);
-
-        return promise;
+            resolve(result);
+        });
     },
 
     callSync: function (func, args, thisObj) {
@@ -68,7 +68,7 @@ _.extend(Resumable.prototype, {
     },
 
     createPause: function () {
-        var pause = new PauseException(function (promise, error, result, states) {
+        var pause = new PauseException(function (resolve, reject, error, result, states) {
                 var i = 0,
                     lastResult = result,
                     state;
@@ -92,7 +92,7 @@ _.extend(Resumable.prototype, {
                                 lastResult = state.func();
                             } catch (e) {
                                 if (e instanceof PauseException) {
-                                    e.setPromise(promise);
+                                    e.setPromise(resolve, reject);
 
                                     return false;
                                 }
@@ -110,14 +110,14 @@ _.extend(Resumable.prototype, {
 
                     if (i === states.length) {
                         // Error was not handled by anything up the call stack
-                        promise.reject(error);
+                        reject(error);
                         return;
                     }
                 }
 
                 function handleNextState() {
                     if (i === states.length) {
-                        promise.resolve(lastResult);
+                        resolve(lastResult);
                         return;
                     }
 
@@ -135,12 +135,14 @@ _.extend(Resumable.prototype, {
                     } catch (e) {
                         if (e instanceof PauseException) {
                             e.setPromise(
-                                new Promise().done(function (result) {
+                                function (result) {
                                     lastResult = result;
                                     handleNextState();
-                                }).fail(function (error) {
-                                    promise.reject(error);
-                                })
+                                },
+                                function (error) {
+                                    // FIXME: Probably needs to call catch handlers
+                                    reject(error);
+                                }
                             );
 
                             return;
@@ -186,8 +188,14 @@ _.extend(Resumable.prototype, {
             }
         });
 
+        transpiledCode = 'return ' + transpiledCode;
+
+        if (options[STRICT]) {
+            transpiledCode = '"use strict"; ' + transpiledCode;
+        }
+
         /*jshint evil:true */
-        func = new Function(names, 'return ' + transpiledCode);
+        func = new Function(names, transpiledCode);
 
         return resumable.call(func.apply(null, values), [], null);
     },
@@ -221,8 +229,14 @@ _.extend(Resumable.prototype, {
             }
         });
 
+        transpiledCode = 'return ' + transpiledCode;
+
+        if (options[STRICT]) {
+            transpiledCode = '"use strict"; ' + transpiledCode;
+        }
+
         /*jshint evil:true */
-        func = new Function(names, 'return ' + transpiledCode);
+        func = new Function(names, transpiledCode);
 
         return resumable.callSync(func.apply(null, values)(), args, null);
     }
