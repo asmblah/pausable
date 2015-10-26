@@ -9,7 +9,7 @@
 
 'use strict';
 
-var _ = require('lodash'),
+var _ = require('microdash'),
     estraverse = estraverse,
     ArrayExpressionTranspiler = require('./ExpressionTranspiler/ArrayExpressionTranspiler'),
     AssignmentExpressionTranspiler = require('./ExpressionTranspiler/AssignmentExpressionTranspiler'),

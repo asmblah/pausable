@@ -9,7 +9,7 @@
 
 'use strict';
 
-var _ = require('lodash'),
+var _ = require('microdash'),
     estraverse = require('estraverse'),
     LEFT = 'left',
     NAME = 'name',

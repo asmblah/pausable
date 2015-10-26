@@ -9,7 +9,7 @@
 
 'use strict';
 
-var _ = require('lodash'),
+var _ = require('microdash'),
     escodegen = require('escodegen'),
     acorn = require('acorn'),
     PauseException = require('./PauseException'),

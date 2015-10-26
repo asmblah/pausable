@@ -9,7 +9,7 @@
 
 'use strict';
 
-var _ = require('lodash'),
+var _ = require('microdash'),
     estraverse = require('estraverse'),
     BlockContext = require('../BlockContext'),
     LEFT = 'left',

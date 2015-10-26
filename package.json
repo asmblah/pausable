@@ -19,7 +19,7 @@
     "bluebird": "^2.9.34",
     "escodegen": "^1.6.1",
     "estraverse": "^4.1.0",
-    "lodash": "^3.10.0"
+    "microdash": "~1"
   },
   "devDependencies": {
     "chai": "^3.0.0",
