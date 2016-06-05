@@ -35,7 +35,8 @@ var _ = require('microdash'),
 function BlockContext(functionContext) {
     this.functionContext = functionContext;
     this.switchCases = [];
-    this.transformNext = null;
+    this.transforms = [];
+    this.transformsStack = [];
 }
 
 _.extend(BlockContext.prototype, {
@@ -176,16 +177,18 @@ _.extend(BlockContext.prototype, {
     prepareStatement: function () {
         var context = this,
             endIndex = null,
-            index = context.functionContext.getNextStatementIndex();
+            index = context.functionContext.getNextStatementIndex(),
+            transforms = context.transforms.slice();
+
+        context.transforms = [];
 
         return {
             assign: function (statementNode, nextIndex) {
                 var i,
                     switchCases = [];
 
-                if (context.transformNext) {
-                    statementNode = context.transformNext(statementNode);
-                    context.transformNext = null;
+                for (i = 0; i < transforms.length; i++) {
+                    statementNode = transforms[i](statementNode);
                 }
 
                 if (!endIndex) {
@@ -224,8 +227,20 @@ _.extend(BlockContext.prototype, {
         };
     },
 
+    popTransforms: function () {
+        this.transforms = this.transformsStack.pop();
+    },
+
+    pushTransforms: function () {
+        var context = this;
+
+        context.transformsStack.push(context.transforms);
+        context.transforms = [];
+    },
+
     transformNextStatement: function (transformer) {
-        this.transformNext = transformer;
+        // Perform the most recent transformation first
+        this.transforms.unshift(transformer);
     }
 });
 

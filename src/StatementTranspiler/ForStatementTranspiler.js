@@ -15,7 +15,10 @@ var _ = require('microdash'),
     BlockContext = require('../BlockContext'),
     BODY = 'body',
     INIT = 'init',
+    LABEL = 'label',
+    NAME = 'name',
     TEST = 'test',
+    TYPE = 'type',
     UPDATE = 'update',
     Syntax = estraverse.Syntax;
 
@@ -34,22 +37,38 @@ _.extend(ForStatementTranspiler.prototype, {
             ownBlockContext = new BlockContext(functionContext),
             transpiler = this,
             expression,
-            statement;
+            statement,
+            label = parent[TYPE] === Syntax.LabeledStatement ?
+                parent[LABEL][NAME] :
+                null;
 
-        functionContext.pushLabelableContext();
+        functionContext.pushLabelableContext(label);
 
         // 'Init' expression
         if (node[INIT]) {
-            expression = transpiler.expressionTranspiler.transpile(
-                node[INIT],
-                node,
-                functionContext,
-                blockContext
-            );
-            blockContext.prepareStatement().assign({
-                'type': Syntax.ExpressionStatement,
-                'expression': expression
-            });
+            blockContext.pushTransforms();
+
+            // Init can be a variable declaration, eg. `for (var i = 0; ...)`
+            if (node[INIT][TYPE] === Syntax.VariableDeclaration) {
+                transpiler.statementTranspiler.transpile(
+                    node[INIT],
+                    node,
+                    functionContext,
+                    blockContext
+                );
+            } else {
+                expression = transpiler.expressionTranspiler.transpile(
+                    node[INIT],
+                    node,
+                    functionContext,
+                    blockContext
+                );
+                blockContext.prepareStatement().assign({
+                    'type': Syntax.ExpressionStatement,
+                    'expression': expression
+                });
+            }
+            blockContext.popTransforms();
         }
 
         statement = blockContext.prepareStatement();
@@ -120,14 +139,7 @@ _.extend(ForStatementTranspiler.prototype, {
             }
         };
 
-        statement.assign(functionContext.isLabelUsed() ? {
-            'type': Syntax.LabeledStatement,
-            'label': {
-                'type': Syntax.Identifier,
-                'name': functionContext.getLabel()
-            },
-            'body': forNode
-        } : forNode);
+        statement.assign(functionContext.getLabeledStatement(forNode));
 
         functionContext.popLabelableContext();
     }

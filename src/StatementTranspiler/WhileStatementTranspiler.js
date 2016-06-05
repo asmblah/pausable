@@ -14,7 +14,10 @@ var _ = require('microdash'),
     estraverse = require('estraverse'),
     BlockContext = require('../BlockContext'),
     BODY = 'body',
+    LABEL = 'label',
+    NAME = 'name',
     TEST = 'test',
+    TYPE = 'type',
     Syntax = estraverse.Syntax;
 
 function WhileStatementTranspiler(statementTranspiler, expressionTranspiler) {
@@ -32,9 +35,12 @@ _.extend(WhileStatementTranspiler.prototype, {
             ownBlockContext = new BlockContext(functionContext),
             transpiler = this,
             expression,
-            statement;
+            statement,
+            label = parent[TYPE] === Syntax.LabeledStatement ?
+                parent[LABEL][NAME] :
+                null;
 
-        functionContext.pushLabelableContext();
+        functionContext.pushLabelableContext(label);
 
         statement = blockContext.prepareStatement();
 
@@ -78,14 +84,7 @@ _.extend(WhileStatementTranspiler.prototype, {
             }
         };
 
-        statement.assign(functionContext.isLabelUsed() ? {
-            'type': Syntax.LabeledStatement,
-            'label': {
-                'type': Syntax.Identifier,
-                'name': functionContext.getLabel()
-            },
-            'body': forNode
-        } : forNode);
+        statement.assign(functionContext.getLabeledStatement(forNode));
 
         functionContext.popLabelableContext();
     }

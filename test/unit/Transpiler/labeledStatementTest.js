@@ -57,7 +57,7 @@ EOS
             case 6:
             case 7:
             case 8:
-                my_block: {
+                label_my_block: {
                     switch (statementIndex) {
                     case 1:
                         temp0 = print;
@@ -79,7 +79,7 @@ EOS
                                 temp1(2);
                                 statementIndex = 6;
                             case 6:
-                                break my_block;
+                                break label_my_block;
                                 statementIndex = 7;
                             }
                         }

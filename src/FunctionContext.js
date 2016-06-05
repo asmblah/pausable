@@ -12,6 +12,7 @@
 var _ = require('microdash'),
     acorn = require('acorn'),
     estraverse = require('estraverse'),
+    hasOwn = {}.hasOwnProperty,
     DECLARATIONS = 'declarations',
     ID = 'id',
     NAME = 'name',
@@ -21,6 +22,8 @@ function FunctionContext() {
     this.assignmentVariables = {};
     this.catches = [];
     this.functionDeclarations = [];
+    this.labelAssigned = null;
+    this.labelAssigneds = [];
     this.labelIndex = -1;
     this.labelUsed = false;
     this.labelUseds = [];
@@ -69,7 +72,26 @@ _.extend(FunctionContext.prototype, {
 
         context.labelUsed = true;
 
-        return 'label' + context.labelIndex;
+        return context.labelAssigned !== null ?
+            'label_' + context.labelAssigned :
+            'label' + context.labelIndex;
+    },
+
+    getLabeledStatement: function (statementNode) {
+        var context = this;
+
+        if (!context.isLabelUsed() || context.labelAssigned !== null) {
+            return statementNode;
+        }
+
+        return {
+            'type': Syntax.LabeledStatement,
+            'label': {
+                'type': Syntax.Identifier,
+                'name': context.getLabel()
+            },
+            'body': statementNode
+        };
     },
 
     getLastAssignments: function () {
@@ -401,7 +423,14 @@ _.extend(FunctionContext.prototype, {
     },
 
     getLastTempNameForVariable: function (variableName) {
-        return this.lastTempNames[variableName];
+        var context = this;
+
+        // Return the variable's name if it has not been assigned a temporary variable
+        if (!hasOwn.call(context.lastTempNames, variableName)) {
+            return variableName;
+        }
+
+        return context.lastTempNames[variableName];
     },
 
     hasVariableDefined: function (name) {
@@ -432,14 +461,17 @@ _.extend(FunctionContext.prototype, {
     popLabelableContext: function () {
         var context = this;
 
+        context.labelAssigned = context.labelAssigneds.pop();
         context.labelUsed = context.labelUseds.pop();
         context.labelIndex--;
     },
 
-    pushLabelableContext: function () {
+    pushLabelableContext: function (label) {
         var context = this;
 
+        context.labelAssigneds.push(context.labelAssigned);
         context.labelUseds.push(context.labelUsed);
+        context.labelAssigned = label || null;
         context.labelUsed = false;
         context.labelIndex++;
     }

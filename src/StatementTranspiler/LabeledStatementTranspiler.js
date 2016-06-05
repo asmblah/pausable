@@ -13,6 +13,7 @@ var _ = require('microdash'),
     estraverse = require('estraverse'),
     BODY = 'body',
     LABEL = 'label',
+    NAME = 'name',
     Syntax = estraverse.Syntax;
 
 function LabeledStatementTranspiler(statementTranspiler, expressionTranspiler) {
@@ -32,7 +33,10 @@ _.extend(LabeledStatementTranspiler.prototype, {
         blockContext.transformNextStatement(function (node) {
             return {
                 'type': Syntax.LabeledStatement,
-                'label': label,
+                'label': {
+                    'type': Syntax.Identifier,
+                    'name': 'label_' + label[NAME]
+                },
                 'body': node
             };
         });

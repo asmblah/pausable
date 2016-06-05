@@ -164,30 +164,29 @@ EOS
             case 5:
             case 6:
             case 7:
-                my_block:
-                    label0:
-                        for (;;) {
-                            statementIndex = 3;
-                            switch (statementIndex) {
-                            case 3:
-                                temp1 = print;
-                                statementIndex = 4;
-                            case 4:
-                                temp1(2);
-                                statementIndex = 5;
-                            case 5:
-                                continue my_block;
-                                statementIndex = 6;
-                            case 6:
-                                temp2 = a;
-                                statementIndex = 7;
-                            case 7:
-                                if (!(temp2 < 4)) {
-                                    break label0;
-                                }
-                                statementIndex = 8;
+                label_my_block:
+                    for (;;) {
+                        statementIndex = 3;
+                        switch (statementIndex) {
+                        case 3:
+                            temp1 = print;
+                            statementIndex = 4;
+                        case 4:
+                            temp1(2);
+                            statementIndex = 5;
+                        case 5:
+                            continue label_my_block;
+                            statementIndex = 6;
+                        case 6:
+                            temp2 = a;
+                            statementIndex = 7;
+                        case 7:
+                            if (!(temp2 < 4)) {
+                                break label_my_block;
                             }
+                            statementIndex = 8;
                         }
+                    }
                 statementIndex = 8;
             case 8:
                 temp3 = print;

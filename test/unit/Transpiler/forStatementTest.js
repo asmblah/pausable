@@ -494,4 +494,254 @@ EOS
             }
         })).to.equal(expectedOutputJS);
     });
+
+    it('should correctly transpile a break out of labeled for loop', function () {
+        var inputJS = nowdoc(function () {/*<<<EOS
+my_block: for (i = 0; i < 4; i++) {
+    print(1);
+    if (true) {
+        print(2);
+        break my_block;
+    }
+    print(3);
+}
+EOS
+*/;}), // jshint ignore:line
+            expectedOutputJS = nowdoc(function () {/*<<<EOS
+(function () {
+    var statementIndex = 0, temp0, temp1, temp2, temp3, temp4, temp5;
+    return function resumableScope() {
+        if (Resumable._resumeState_) {
+            statementIndex = Resumable._resumeState_.statementIndex;
+            temp0 = Resumable._resumeState_.temp0;
+            temp1 = Resumable._resumeState_.temp1;
+            temp2 = Resumable._resumeState_.temp2;
+            temp3 = Resumable._resumeState_.temp3;
+            temp4 = Resumable._resumeState_.temp4;
+            temp5 = Resumable._resumeState_.temp5;
+            Resumable._resumeState_ = null;
+        }
+        try {
+            switch (statementIndex) {
+            case 0:
+                i = 0;
+                statementIndex = 1;
+            case 1:
+                statementIndex = 2;
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+                label_my_block:
+                    for (;;) {
+                        switch (statementIndex) {
+                        case 2:
+                            temp0 = i;
+                            statementIndex = 3;
+                        case 3:
+                            if (!(temp0 < 4)) {
+                                break label_my_block;
+                            }
+                            statementIndex = 4;
+                        case 4:
+                            temp1 = print;
+                            statementIndex = 5;
+                        case 5:
+                            temp1(1);
+                            statementIndex = 6;
+                        case 6:
+                            statementIndex = 7;
+                        case 7:
+                        case 8:
+                        case 9:
+                            if (statementIndex > 7 || true) {
+                                switch (statementIndex) {
+                                case 7:
+                                    temp2 = print;
+                                    statementIndex = 8;
+                                case 8:
+                                    temp2(2);
+                                    statementIndex = 9;
+                                case 9:
+                                    break label_my_block;
+                                    statementIndex = 10;
+                                }
+                            }
+                            statementIndex = 10;
+                        case 10:
+                            temp3 = print;
+                            statementIndex = 11;
+                        case 11:
+                            temp3(3);
+                            statementIndex = 12;
+                        case 12:
+                            temp4 = i;
+                            statementIndex = 13;
+                        case 13:
+                            temp5 = temp4 + 1;
+                            statementIndex = 14;
+                        case 14:
+                            i = temp5;
+                            statementIndex = 15;
+                        case 15:
+                            temp4;
+                            statementIndex = 16;
+                        }
+                        statementIndex = 2;
+                    }
+                statementIndex = 16;
+            }
+        } catch (e) {
+            if (e instanceof Resumable.PauseException) {
+                e.add({
+                    func: resumableScope,
+                    statementIndex: statementIndex + 1,
+                    assignments: {
+                        '2': 'temp0',
+                        '4': 'temp1',
+                        '7': 'temp2',
+                        '10': 'temp3',
+                        '12': 'temp4',
+                        '13': 'temp5'
+                    },
+                    temp0: temp0,
+                    temp1: temp1,
+                    temp2: temp2,
+                    temp3: temp3,
+                    temp4: temp4,
+                    temp5: temp5
+                });
+            }
+            throw e;
+        }
+    }.apply(this, arguments);
+});
+EOS
+*/;}), // jshint ignore:line
+            ast = acorn.parse(inputJS, {'allowReturnOutsideFunction': true});
+
+        ast = transpiler.transpile(ast);
+
+        expect(escodegen.generate(ast, {
+            format: {
+                indent: {
+                    style: '    ',
+                    base: 0
+                }
+            }
+        })).to.equal(expectedOutputJS);
+    });
+
+    it('should correctly transpile a for loop with variable declaration using function call in init', function () {
+        var inputJS = nowdoc(function () {/*<<<EOS
+for (var i = getStart(); i < 4; i++) {
+    print('inside');
+}
+EOS
+*/;}), // jshint ignore:line
+            expectedOutputJS = nowdoc(function () {/*<<<EOS
+(function () {
+    var statementIndex = 0, i, temp0, temp1, temp2, temp3;
+    return function resumableScope() {
+        if (Resumable._resumeState_) {
+            statementIndex = Resumable._resumeState_.statementIndex;
+            temp0 = Resumable._resumeState_.temp0;
+            temp1 = Resumable._resumeState_.temp1;
+            temp2 = Resumable._resumeState_.temp2;
+            temp3 = Resumable._resumeState_.temp3;
+            Resumable._resumeState_ = null;
+        }
+        try {
+            switch (statementIndex) {
+            case 0:
+                temp0 = getStart;
+                statementIndex = 1;
+            case 1:
+                temp1 = temp0();
+                statementIndex = 2;
+            case 2:
+                i = temp1;
+                statementIndex = 3;
+            case 3:
+                statementIndex = 4;
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+                label0:
+                    for (;;) {
+                        switch (statementIndex) {
+                        case 4:
+                            if (!(i < 4)) {
+                                break label0;
+                            }
+                            statementIndex = 5;
+                        case 5:
+                            temp2 = print;
+                            statementIndex = 6;
+                        case 6:
+                            temp2('inside');
+                            statementIndex = 7;
+                        case 7:
+                            temp3 = i + 1;
+                            statementIndex = 8;
+                        case 8:
+                            i = temp3;
+                            statementIndex = 9;
+                        case 9:
+                            i;
+                            statementIndex = 10;
+                        }
+                        statementIndex = 4;
+                    }
+                statementIndex = 10;
+            }
+        } catch (e) {
+            if (e instanceof Resumable.PauseException) {
+                e.add({
+                    func: resumableScope,
+                    statementIndex: statementIndex + 1,
+                    assignments: {
+                        '0': 'temp0',
+                        '1': 'temp1',
+                        '5': 'temp2',
+                        '7': 'temp3'
+                    },
+                    temp0: temp0,
+                    temp1: temp1,
+                    temp2: temp2,
+                    temp3: temp3
+                });
+            }
+            throw e;
+        }
+    }.apply(this, arguments);
+});
+EOS
+*/;}), // jshint ignore:line
+            ast = acorn.parse(inputJS, {'allowReturnOutsideFunction': true});
+
+        ast = transpiler.transpile(ast);
+
+        expect(escodegen.generate(ast, {
+            format: {
+                indent: {
+                    style: '    ',
+                    base: 0
+                }
+            }
+        })).to.equal(expectedOutputJS);
+    });
 });

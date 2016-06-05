@@ -12,6 +12,7 @@
 var _ = require('microdash'),
     estraverse = require('estraverse'),
     LABEL = 'label',
+    NAME = 'name',
     Syntax = estraverse.Syntax;
 
 function ContinueStatementTranspiler(statementTranspiler, expressionTranspiler) {
@@ -25,11 +26,11 @@ _.extend(ContinueStatementTranspiler.prototype, {
     },
 
     transpile: function (node, parent, functionContext, blockContext) {
-        var label = node[LABEL] ?
-            node[LABEL] :
-            {
+        var label = {
                 'type': Syntax.Identifier,
-                'name': functionContext.getLabel()
+                'name': node[LABEL] ?
+                    'label_' + node[LABEL][NAME] :
+                    functionContext.getLabel()
             };
 
         blockContext.prepareStatement().assign({
