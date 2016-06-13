@@ -16,17 +16,15 @@ var _ = require('microdash'),
     DECLARATIONS = 'declarations',
     ID = 'id',
     NAME = 'name',
+    LabelableContext = require('./LabelableContext'),
     Syntax = estraverse.Syntax;
 
 function FunctionContext() {
     this.assignmentVariables = {};
     this.catches = [];
     this.functionDeclarations = [];
-    this.labelAssigned = null;
-    this.labelAssigneds = [];
-    this.labelIndex = -1;
-    this.labelUsed = false;
-    this.labelUseds = [];
+    this.labelableContext = null;
+    this.labelableContextStack = [];
     this.lastAssignments = [];
     this.lastTempNames = {};
     this.nextStatementIndex = 0;
@@ -68,30 +66,35 @@ _.extend(FunctionContext.prototype, {
     },
 
     getLabel: function () {
-        var context = this;
+        var context = this,
+            labelableContext = context.labelableContext;
 
-        context.labelUsed = true;
+        return labelableContext.getPrefixedLabel();
+    },
 
-        return context.labelAssigned !== null ?
-            'label_' + context.labelAssigned :
-            'label' + context.labelIndex;
+    getLabelableContext: function (label) {
+        var context = this,
+            i;
+
+        if (!label) {
+            return context.labelableContext;
+        }
+
+        if (context.labelableContext.getLabel() === label) {
+            return context.labelableContext;
+        }
+
+        for (i = context.labelableContextStack.length - 1; i >= 0; i--) {
+            if (context.labelableContextStack[i].getLabel() === label) {
+                return context.labelableContextStack[i];
+            }
+        }
+
+        return null;
     },
 
     getLabeledStatement: function (statementNode) {
-        var context = this;
-
-        if (!context.isLabelUsed() || context.labelAssigned !== null) {
-            return statementNode;
-        }
-
-        return {
-            'type': Syntax.LabeledStatement,
-            'label': {
-                'type': Syntax.Identifier,
-                'name': context.getLabel()
-            },
-            'body': statementNode
-        };
+        return this.labelableContext.getLabeledStatement(statementNode);
     },
 
     getLastAssignments: function () {
@@ -452,28 +455,21 @@ _.extend(FunctionContext.prototype, {
         return isDefined;
     },
 
-    isLabelUsed: function () {
-        var context = this;
-
-        return context.labelUsed;
-    },
-
     popLabelableContext: function () {
         var context = this;
 
-        context.labelAssigned = context.labelAssigneds.pop();
-        context.labelUsed = context.labelUseds.pop();
-        context.labelIndex--;
+        context.labelableContext = context.labelableContextStack.pop();
     },
 
     pushLabelableContext: function (label) {
-        var context = this;
+        var context = this,
+            labelableContextIndex = context.labelableContextStack.length,
+            labelableContext = new LabelableContext(label, labelableContextIndex);
 
-        context.labelAssigneds.push(context.labelAssigned);
-        context.labelUseds.push(context.labelUsed);
-        context.labelAssigned = label || null;
-        context.labelUsed = false;
-        context.labelIndex++;
+        context.labelableContextStack.push(context.labelableContext);
+        context.labelableContext = labelableContext;
+
+        return labelableContext;
     }
 });
 

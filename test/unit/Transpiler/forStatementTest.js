@@ -181,7 +181,6 @@ EOS
                             statementIndex = 10;
                         case 10:
                             break label0;
-                            statementIndex = 11;
                         case 11:
                             temp5 = i;
                             statementIndex = 12;
@@ -387,7 +386,6 @@ EOS
                                         statementIndex = 18;
                                     case 18:
                                         break label1;
-                                        statementIndex = 19;
                                     case 19:
                                         temp9 = i;
                                         statementIndex = 20;
@@ -412,7 +410,6 @@ EOS
                             statementIndex = 25;
                         case 25:
                             break label0;
-                            statementIndex = 26;
                         case 26:
                             temp12 = i;
                             statementIndex = 27;
@@ -574,7 +571,6 @@ EOS
                                     statementIndex = 9;
                                 case 9:
                                     break label_my_block;
-                                    statementIndex = 10;
                                 }
                             }
                             statementIndex = 10;
@@ -723,6 +719,129 @@ EOS
                     temp1: temp1,
                     temp2: temp2,
                     temp3: temp3
+                });
+            }
+            throw e;
+        }
+    }.apply(this, arguments);
+});
+EOS
+*/;}), // jshint ignore:line
+            ast = acorn.parse(inputJS, {'allowReturnOutsideFunction': true});
+
+        ast = transpiler.transpile(ast);
+
+        expect(escodegen.generate(ast, {
+            format: {
+                indent: {
+                    style: '    ',
+                    base: 0
+                }
+            }
+        })).to.equal(expectedOutputJS);
+    });
+
+    it('should correctly transpile a for loop with continue', function () {
+        /******
+         * NB: `i` will not be read separately here as it is a local variable
+         ******/
+        var inputJS = nowdoc(function () {/*<<<EOS
+for (var i = getStart(); i < 4; i++) {
+    one();
+    continue;
+    two();
+}
+EOS
+*/;}), // jshint ignore:line
+            expectedOutputJS = nowdoc(function () {/*<<<EOS
+(function () {
+    var statementIndex = 0, i, temp0, temp1, temp2, temp3, temp4;
+    return function resumableScope() {
+        if (Resumable._resumeState_) {
+            statementIndex = Resumable._resumeState_.statementIndex;
+            temp0 = Resumable._resumeState_.temp0;
+            temp1 = Resumable._resumeState_.temp1;
+            temp2 = Resumable._resumeState_.temp2;
+            temp3 = Resumable._resumeState_.temp3;
+            temp4 = Resumable._resumeState_.temp4;
+            Resumable._resumeState_ = null;
+        }
+        try {
+            switch (statementIndex) {
+            case 0:
+                temp0 = getStart;
+                statementIndex = 1;
+            case 1:
+                temp1 = temp0();
+                statementIndex = 2;
+            case 2:
+                i = temp1;
+                statementIndex = 3;
+            case 3:
+                statementIndex = 4;
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+            case 11:
+            case 12:
+                label0:
+                    for (;;) {
+                        switch (statementIndex) {
+                        case 4:
+                            if (!(i < 4)) {
+                                break label0;
+                            }
+                            statementIndex = 5;
+                        case 5:
+                            temp2 = one;
+                            statementIndex = 6;
+                        case 6:
+                            temp2();
+                            statementIndex = 7;
+                        case 7:
+                            statementIndex = 10;
+                            continue label0;
+                        case 8:
+                            temp3 = two;
+                            statementIndex = 9;
+                        case 9:
+                            temp3();
+                            statementIndex = 10;
+                        case 10:
+                            temp4 = i + 1;
+                            statementIndex = 11;
+                        case 11:
+                            i = temp4;
+                            statementIndex = 12;
+                        case 12:
+                            i;
+                            statementIndex = 13;
+                        }
+                        statementIndex = 4;
+                    }
+                statementIndex = 13;
+            }
+        } catch (e) {
+            if (e instanceof Resumable.PauseException) {
+                e.add({
+                    func: resumableScope,
+                    statementIndex: statementIndex + 1,
+                    assignments: {
+                        '0': 'temp0',
+                        '1': 'temp1',
+                        '5': 'temp2',
+                        '8': 'temp3',
+                        '10': 'temp4'
+                    },
+                    temp0: temp0,
+                    temp1: temp1,
+                    temp2: temp2,
+                    temp3: temp3,
+                    temp4: temp4
                 });
             }
             throw e;

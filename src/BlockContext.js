@@ -15,8 +15,14 @@ var _ = require('microdash'),
     CONSEQUENT = 'consequent',
     Syntax = estraverse.Syntax,
     createSwitchCase = function createSwitchCase(statementNode, index, nextIndex) {
-        if (!nextIndex) {
-            nextIndex = index + 1;
+        var consequent = [statementNode];
+
+        if (nextIndex !== null) {
+            if (!nextIndex) {
+                nextIndex = index + 1;
+            }
+
+            consequent.push(acorn.parse('statementIndex = ' + nextIndex + ';').body[0]);
         }
 
         return {
@@ -25,10 +31,7 @@ var _ = require('microdash'),
                 type: Syntax.Literal,
                 value: index
             },
-            consequent: [
-                statementNode,
-                acorn.parse('statementIndex = ' + nextIndex + ';').body[0]
-            ]
+            consequent: consequent
         };
     };
 
@@ -183,6 +186,20 @@ _.extend(BlockContext.prototype, {
         context.transforms = [];
 
         return {
+            append: function (statementNode) {
+                var switchCase = context.switchCases[index];
+
+                if (!switchCase) {
+                    throw new Error('Cannot append as statement has not been assigned yet!');
+                }
+
+                if (_.isArray(switchCase)) {
+                    switchCase[switchCase.length - 1][CONSEQUENT].push(statementNode);
+                } else {
+                    switchCase.push(statementNode);
+                }
+            },
+
             assign: function (statementNode, nextIndex) {
                 var i,
                     switchCases = [];
@@ -223,6 +240,20 @@ _.extend(BlockContext.prototype, {
 
             getIndex: function () {
                 return index;
+            },
+
+            prepend: function (statementNode) {
+                var switchCase = context.switchCases[index];
+
+                if (!switchCase) {
+                    throw new Error('Cannot prepend as statement has not been assigned yet!');
+                }
+
+                if (_.isArray(switchCase)) {
+                    switchCase[switchCase.length - 1][CONSEQUENT].unshift(statementNode);
+                } else {
+                    switchCase.unshift(statementNode);
+                }
             }
         };
     },

@@ -71,7 +71,6 @@ EOS
                             statementIndex = 5;
                         case 5:
                             break label0;
-                            statementIndex = 6;
                         case 6:
                             temp2 = a;
                             statementIndex = 7;
@@ -176,7 +175,6 @@ EOS
                             statementIndex = 5;
                         case 5:
                             continue label_my_block;
-                            statementIndex = 6;
                         case 6:
                             temp2 = a;
                             statementIndex = 7;

@@ -26,17 +26,23 @@ _.extend(ContinueStatementTranspiler.prototype, {
     },
 
     transpile: function (node, parent, functionContext, blockContext) {
-        var label = {
+        var continueStatement,
+            labelNode = {
                 'type': Syntax.Identifier,
                 'name': node[LABEL] ?
                     'label_' + node[LABEL][NAME] :
                     functionContext.getLabel()
-            };
+            },
+            label = node[LABEL] !== null ? node[LABEL][NAME] : null,
+            labelableContext = functionContext.getLabelableContext(label);
 
-        blockContext.prepareStatement().assign({
+        continueStatement = blockContext.prepareStatement();
+        labelableContext.addContinue(continueStatement);
+
+        continueStatement.assign({
             'type': Syntax.ContinueStatement,
-            'label': label
-        });
+            'label': labelNode
+        }, null);
     }
 });
 

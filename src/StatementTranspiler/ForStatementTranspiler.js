@@ -40,9 +40,11 @@ _.extend(ForStatementTranspiler.prototype, {
             statement,
             label = parent[TYPE] === Syntax.LabeledStatement ?
                 parent[LABEL][NAME] :
-                null;
+                null,
+            labelableContext,
+            updateIndex;
 
-        functionContext.pushLabelableContext(label);
+        labelableContext = functionContext.pushLabelableContext(label);
 
         // 'Init' expression
         if (node[INIT]) {
@@ -113,6 +115,7 @@ _.extend(ForStatementTranspiler.prototype, {
 
         // 'Update' expression
         if (node[UPDATE]) {
+            updateIndex = functionContext.getCurrentStatementIndex();
             expression = transpiler.expressionTranspiler.transpile(
                 node[UPDATE],
                 node,
@@ -123,6 +126,8 @@ _.extend(ForStatementTranspiler.prototype, {
                 'type': Syntax.ExpressionStatement,
                 'expression': expression
             });
+
+            labelableContext.prefixContinuesWithJumpTo(updateIndex);
         }
 
         forNode = {

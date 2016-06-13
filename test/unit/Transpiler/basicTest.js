@@ -968,7 +968,6 @@ EOS
                             statementIndex = 2;
                         case 2:
                             break label0;
-                            statementIndex = 3;
                         }
                         statementIndex = 1;
                     }

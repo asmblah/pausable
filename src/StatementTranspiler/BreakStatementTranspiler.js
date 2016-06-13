@@ -36,7 +36,7 @@ _.extend(BreakStatementTranspiler.prototype, {
         blockContext.prepareStatement().assign({
             'type': Syntax.BreakStatement,
             'label': label
-        });
+        }, null);
     }
 });
 

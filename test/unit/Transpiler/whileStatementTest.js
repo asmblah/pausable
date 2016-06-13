@@ -118,7 +118,6 @@ EOS
                                         statementIndex = 12;
                                     case 12:
                                         break label1;
-                                        statementIndex = 13;
                                     }
                                     statementIndex = 8;
                                 }
@@ -131,7 +130,6 @@ EOS
                             statementIndex = 15;
                         case 15:
                             break label0;
-                            statementIndex = 16;
                         }
                         statementIndex = 3;
                     }
@@ -282,7 +280,6 @@ EOS
                                         statementIndex = 12;
                                     case 12:
                                         continue label1;
-                                        statementIndex = 13;
                                     }
                                     statementIndex = 8;
                                 }
@@ -295,7 +292,6 @@ EOS
                             statementIndex = 15;
                         case 15:
                             continue label0;
-                            statementIndex = 16;
                         }
                         statementIndex = 3;
                     }

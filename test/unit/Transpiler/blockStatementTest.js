@@ -60,7 +60,6 @@ EOS
                         statementIndex = 3;
                     case 3:
                         break label_my_block;
-                        statementIndex = 4;
                     case 4:
                         temp1 = print;
                         statementIndex = 5;
@@ -177,7 +176,6 @@ EOS
                                 statementIndex = 6;
                             case 6:
                                 break label_my_block;
-                                statementIndex = 7;
                             case 7:
                                 temp2 = print;
                                 statementIndex = 8;
@@ -186,7 +184,6 @@ EOS
                                 statementIndex = 9;
                             case 9:
                                 break label_another_block;
-                                statementIndex = 10;
                             case 10:
                                 temp3 = print;
                                 statementIndex = 11;

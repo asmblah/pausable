@@ -80,7 +80,6 @@ EOS
                                 statementIndex = 6;
                             case 6:
                                 break label_my_block;
-                                statementIndex = 7;
                             }
                         }
                         statementIndex = 7;
