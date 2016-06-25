@@ -39,7 +39,6 @@ EOS
             switch (statementIndex) {
             case 0:
                 throw 21;
-                statementIndex = 1;
             }
         } catch (e) {
             if (e instanceof Resumable.PauseException) {

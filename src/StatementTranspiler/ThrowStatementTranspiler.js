@@ -30,7 +30,7 @@ _.extend(ThrowStatementTranspiler.prototype, {
         blockContext.prepareStatement().assign({
             'type': Syntax.ThrowStatement,
             'argument': expression
-        });
+        }, null);
     }
 });
 

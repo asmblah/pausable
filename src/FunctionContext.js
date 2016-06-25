@@ -23,6 +23,7 @@ function FunctionContext() {
     this.assignmentVariables = {};
     this.catches = [];
     this.functionDeclarations = [];
+    this.hasFinally = false;
     this.labelableContext = null;
     this.labelableContextStack = [];
     this.lastAssignments = [];
@@ -43,6 +44,17 @@ _.extend(FunctionContext.prototype, {
 
     addCatch: function (data) {
         this.catches.push(data);
+    },
+
+    addFinally: function () {
+        var context = this;
+
+        if (context.hasFinally) {
+            return;
+        }
+
+        context.addVariable('resumableUncaughtError');
+        context.hasFinally = true;
     },
 
     addFunctionDeclaration: function (declaration) {
@@ -115,6 +127,7 @@ _.extend(FunctionContext.prototype, {
             catchesProperties,
             declaration = acorn.parse('var statementIndex = 0;').body[0],
             functionContext = this,
+            functionSetup = [],
             index,
             statements = [],
             stateProperties = [],
@@ -199,6 +212,24 @@ _.extend(FunctionContext.prototype, {
             });
         }
 
+        if (functionContext.hasFinally) {
+            functionSetup.push({
+                'type': Syntax.VariableDeclaration,
+                'declarations': [{
+                    'type': Syntax.VariableDeclarator,
+                    'id': {
+                        'type': Syntax.Identifier,
+                        'name': 'resumablePause'
+                    },
+                    'init': {
+                        'type': Syntax.Literal,
+                        'value': null
+                    }
+                }],
+                'kind': 'var'
+            });
+        }
+
         for (index = 0; index < functionContext.nextTempIndex; index++) {
             stateProperties.push({
                 'type': Syntax.Property,
@@ -279,7 +310,7 @@ _.extend(FunctionContext.prototype, {
                         params: [],
                         body: {
                             type: Syntax.BlockStatement,
-                            body: [
+                            body: functionSetup.concat([
                                 stateSetup,
                                 {
                                     type: Syntax.TryStatement,
@@ -387,7 +418,7 @@ _.extend(FunctionContext.prototype, {
                                         }
                                     }
                                 }
-                            ]
+                            ])
                         }
                     },
                     property: {

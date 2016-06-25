@@ -197,6 +197,161 @@ EOS
                 third: 3,
                 fourth: 4
             }
+        },
+        'try with both catch and finally blocks when error is rethrown': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = giveMeAsync(1);
+try {
+    exports.second = giveMeAsync(2);
+    throw 'jump';
+    exports.third = giveMeAsync(3);
+} catch (error) {
+    exports.fourth = error;
+    throw error;
+    exports.fifth = true; // Should not be reached
+} finally {
+    exports.sixth = giveMeAsync(6);
+}
+exports.seventh = giveMeAsync(7);
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            // An error should still be raised because we re-throw it inside the catch
+            expectedError: 'jump',
+            expectedExports: {
+                first: 1,
+                second: 2,
+                fourth: 'jump',
+                sixth: 6
+            }
+        },
+        'return inside finally when catch rethrows should discard the error': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = giveMeAsync(1);
+try {
+    exports.second = giveMeAsync(2);
+    throw 'jump';
+    exports.third = giveMeAsync(3);
+} catch (error) {
+    exports.fourth = error;
+    throw error;
+    exports.fifth = true; // Should not be reached
+} finally {
+    exports.sixth = giveMeAsync(6);
+    return 'my final result';
+}
+exports.seventh = giveMeAsync(7);
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedExports: {
+                first: 1,
+                second: 2,
+                fourth: 'jump',
+                sixth: 6
+            },
+            expectedResult: 'my final result'
+        },
+        'return inside finally when no catch is present should discard the error': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = giveMeAsync(1);
+try {
+    exports.second = giveMeAsync(2);
+    throw 'jump';
+    exports.third = giveMeAsync(3);
+} finally {
+    exports.fourth = giveMeAsync(4);
+    return 'my final result';
+}
+exports.fifth = giveMeAsync(5);
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedExports: {
+                first: 1,
+                second: 2,
+                fourth: 4
+            },
+            expectedResult: 'my final result'
+        },
+        'nested try with catch and finally that throws again': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = giveMeAsync(1);
+try {
+    exports.second = giveMeAsync(2);
+    try {
+        exports.third = giveMeAsync(3);
+        throw 'jump';
+        exports.fourth = giveMeAsync(4);
+    } finally {
+        exports.fifth = giveMeAsync(5);
+        throw 'inner';
+    }
+    exports.sixth = giveMeAsync(6);
+} finally {
+    exports.seventh = giveMeAsync(7);
+    return 'my final result';
+}
+exports.eighth = giveMeAsync(8);
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedExports: {
+                first: 1,
+                second: 2,
+                third: 3,
+                fifth: 5,
+                seventh: 7
+            },
+            expectedResult: 'my final result'
         }
     }, tools.check);
 });
