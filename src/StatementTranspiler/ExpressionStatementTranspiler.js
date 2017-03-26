@@ -27,10 +27,12 @@ _.extend(ExpressionStatementTranspiler.prototype, {
     transpile: function (node, parent, functionContext, blockContext) {
         var expression = this.expressionTranspiler.transpile(node[EXPRESSION], node, functionContext, blockContext);
 
-        blockContext.prepareStatement().assign({
-            'type': Syntax.ExpressionStatement,
-            'expression': expression
-        });
+        blockContext.prepareStatement().assign(
+            functionContext.createASTNode(node, {
+                'type': Syntax.ExpressionStatement,
+                'expression': expression
+            })
+        );
     }
 });
 

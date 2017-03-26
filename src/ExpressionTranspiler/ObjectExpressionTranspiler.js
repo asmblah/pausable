@@ -27,7 +27,7 @@ _.extend(ObjectExpressionTranspiler.prototype, {
     transpile: function (node, parent, functionContext, blockContext) {
         var transpiler = this;
 
-        return {
+        return functionContext.createASTNode(node, {
             'type': Syntax.ObjectExpression,
             'properties': transpiler.expressionTranspiler.transpileArray(
                 node[PROPERTIES],
@@ -35,7 +35,7 @@ _.extend(ObjectExpressionTranspiler.prototype, {
                 functionContext,
                 blockContext
             )
-        };
+        });
     }
 });
 

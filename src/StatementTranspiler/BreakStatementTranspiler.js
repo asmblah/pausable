@@ -33,10 +33,13 @@ _.extend(BreakStatementTranspiler.prototype, {
                     functionContext.getLabel()
             };
 
-        blockContext.prepareStatement().assign({
-            'type': Syntax.BreakStatement,
-            'label': label
-        }, null);
+        blockContext.prepareStatement().assign(
+            functionContext.createASTNode(node, {
+                'type': Syntax.BreakStatement,
+                'label': label
+            }),
+            null
+        );
     }
 });
 

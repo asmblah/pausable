@@ -35,25 +35,26 @@ _.extend(AssignmentExpressionTranspiler.prototype, {
             assignment: true
         });
 
+        // Expand `A *= B` to `A = A * B`
         if (node[OPERATOR] === '=') {
             right = node[RIGHT];
         } else {
-            right = {
+            right = functionContext.createASTNode(node, {
                 'type': Syntax.BinaryExpression,
                 'operator': node[OPERATOR].charAt(0),
                 'left': node[LEFT],
                 'right': node[RIGHT]
-            };
+            });
         }
 
         right = transpiler.expressionTranspiler.transpile(right, node, functionContext, blockContext);
 
-        return {
+        return functionContext.createASTNode(node, {
             'type': Syntax.AssignmentExpression,
             'operator': '=',
             'left': left,
             'right': right
-        };
+        });
     }
 });
 

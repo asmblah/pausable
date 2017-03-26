@@ -34,32 +34,8 @@ _.extend(IfStatementTranspiler.prototype, {
 
         consequentStatement = blockContext.prepareStatement();
 
-        consequentStatement.assign({
-            'type': Syntax.IfStatement,
-            'test': {
-                'type': Syntax.LogicalExpression,
-                'operator': '||',
-                'left': {
-                    'type': Syntax.BinaryExpression,
-                    'operator': '>',
-                    'left': {
-                        'type': Syntax.Identifier,
-                        'name': 'statementIndex'
-                    },
-                    'right': {
-                        'type': Syntax.Literal,
-                        'value': consequentStatement.getIndex() + 1
-                    }
-                },
-                'right': expression
-            },
-            'consequent': transpiler.statementTranspiler.transpileBlock(node[CONSEQUENT], node, functionContext)
-        });
-
-        if (node[ALTERNATE]) {
-            alternateStatement = blockContext.prepareStatement();
-
-            alternateStatement.assign({
+        consequentStatement.assign(
+            functionContext.createASTNode(node, {
                 'type': Syntax.IfStatement,
                 'test': {
                     'type': Syntax.LogicalExpression,
@@ -73,18 +49,46 @@ _.extend(IfStatementTranspiler.prototype, {
                         },
                         'right': {
                             'type': Syntax.Literal,
-                            'value': alternateStatement.getIndex() + 1
+                            'value': consequentStatement.getIndex() + 1
                         }
                     },
-                    'right': {
-                        'type': Syntax.UnaryExpression,
-                        'operator': '!',
-                        'prefix': true,
-                        'argument': expression
-                    }
+                    'right': expression
                 },
-                'consequent': transpiler.statementTranspiler.transpileBlock(node[ALTERNATE], node, functionContext)
-            });
+                'consequent': transpiler.statementTranspiler.transpileBlock(node[CONSEQUENT], node, functionContext)
+            })
+        );
+
+        if (node[ALTERNATE]) {
+            alternateStatement = blockContext.prepareStatement();
+
+            alternateStatement.assign(
+                functionContext.createASTNode(node, {
+                    'type': Syntax.IfStatement,
+                    'test': {
+                        'type': Syntax.LogicalExpression,
+                        'operator': '||',
+                        'left': {
+                            'type': Syntax.BinaryExpression,
+                            'operator': '>',
+                            'left': {
+                                'type': Syntax.Identifier,
+                                'name': 'statementIndex'
+                            },
+                            'right': {
+                                'type': Syntax.Literal,
+                                'value': alternateStatement.getIndex() + 1
+                            }
+                        },
+                        'right': {
+                            'type': Syntax.UnaryExpression,
+                            'operator': '!',
+                            'prefix': true,
+                            'argument': expression
+                        }
+                    },
+                    'consequent': transpiler.statementTranspiler.transpileBlock(node[ALTERNATE], node, functionContext)
+                })
+            );
         }
     }
 });

@@ -46,31 +46,33 @@ _.extend(WhileStatementTranspiler.prototype, {
 
         expression = transpiler.expressionTranspiler.transpile(node[TEST], node, functionContext, ownBlockContext);
 
-        ownBlockContext.prepareStatement().assign({
-            'type': Syntax.IfStatement,
-            'test': {
-                'type': Syntax.UnaryExpression,
-                'operator': '!',
-                'prefix': true,
-                'argument': expression
-            },
-            'consequent': {
-                'type': Syntax.BlockStatement,
-                'body': [
-                    {
-                        'type': Syntax.BreakStatement,
-                        'label': {
-                            'type': Syntax.Identifier,
-                            'name': functionContext.getLabel()
+        ownBlockContext.prepareStatement().assign(
+            functionContext.createASTNode(node[TEST], {
+                'type': Syntax.IfStatement,
+                'test': {
+                    'type': Syntax.UnaryExpression,
+                    'operator': '!',
+                    'prefix': true,
+                    'argument': expression
+                },
+                'consequent': {
+                    'type': Syntax.BlockStatement,
+                    'body': [
+                        {
+                            'type': Syntax.BreakStatement,
+                            'label': {
+                                'type': Syntax.Identifier,
+                                'name': functionContext.getLabel()
+                            }
                         }
-                    }
-                ]
-            }
-        });
+                    ]
+                }
+            })
+        );
 
         transpiler.statementTranspiler.transpileArray(node[BODY][BODY], node, functionContext, ownBlockContext);
 
-        forNode = {
+        forNode = functionContext.createASTNode(node, {
             'type': Syntax.ForStatement,
             'init': null,
             'test': null,
@@ -82,7 +84,7 @@ _.extend(WhileStatementTranspiler.prototype, {
                     acorn.parse('statementIndex = ' + (statement.getIndex() + 1) + ';').body[0]
                 ]
             }
-        };
+        });
 
         statement.assign(functionContext.getLabeledStatement(forNode));
 

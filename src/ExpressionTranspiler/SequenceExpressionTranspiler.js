@@ -39,10 +39,10 @@ _.extend(SequenceExpressionTranspiler.prototype, {
             );
         });
 
-        return {
+        return functionContext.createASTNode(node, {
             'type': Syntax.SequenceExpression,
             'expressions': expressions
-        };
+        });
     }
 });
 

@@ -27,22 +27,25 @@ _.extend(ContinueStatementTranspiler.prototype, {
 
     transpile: function (node, parent, functionContext, blockContext) {
         var continueStatement,
-            labelNode = {
+            labelNode = functionContext.createASTNode(node[LABEL] || node, {
                 'type': Syntax.Identifier,
                 'name': node[LABEL] ?
                     'label_' + node[LABEL][NAME] :
                     functionContext.getLabel()
-            },
+            }),
             label = node[LABEL] !== null ? node[LABEL][NAME] : null,
             labelableContext = functionContext.getLabelableContext(label);
 
         continueStatement = blockContext.prepareStatement();
         labelableContext.addContinue(continueStatement);
 
-        continueStatement.assign({
-            'type': Syntax.ContinueStatement,
-            'label': labelNode
-        }, null);
+        continueStatement.assign(
+            functionContext.createASTNode(node, {
+                'type': Syntax.ContinueStatement,
+                'label': labelNode
+            }),
+            null
+        );
     }
 });
 

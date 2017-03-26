@@ -29,10 +29,12 @@ _.extend(ReturnStatementTranspiler.prototype, {
             this.expressionTranspiler.transpile(node[ARGUMENT], node, functionContext, blockContext) :
             null;
 
-        blockContext.prepareStatement().assign({
-            'type': Syntax.ReturnStatement,
-            'argument': expression
-        });
+        blockContext.prepareStatement().assign(
+            functionContext.createASTNode(node, {
+                'type': Syntax.ReturnStatement,
+                'argument': expression
+            })
+        );
     }
 });
 

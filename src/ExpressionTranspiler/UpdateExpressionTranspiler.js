@@ -44,7 +44,7 @@ _.extend(UpdateExpressionTranspiler.prototype, {
                 functionContext,
                 blockContext
             );
-            object = {
+            object = functionContext.createASTNode(node[ARGUMENT][OBJECT], {
                 'type': Syntax.MemberExpression,
                 'object': object,
                 'property': node[ARGUMENT][COMPUTED] ?
@@ -56,13 +56,13 @@ _.extend(UpdateExpressionTranspiler.prototype, {
                     ) :
                     node[ARGUMENT][PROPERTY],
                 'computed': node[ARGUMENT][COMPUTED]
-            };
+            });
             objectTempName = functionContext.getTempName();
             blockContext.addAssignment(objectTempName).assign(object);
-            expression = {
+            expression = functionContext.createASTNode(node[ARGUMENT][OBJECT], {
                 'type': Syntax.Identifier,
                 'name': objectTempName
-            };
+            });
         } else {
             expression = this.expressionTranspiler.transpile(
                 node[ARGUMENT],
@@ -74,36 +74,41 @@ _.extend(UpdateExpressionTranspiler.prototype, {
 
         // Addition/subtraction of 1
         resultTempName = functionContext.getTempName();
-        blockContext.addAssignment(resultTempName).assign({
-            'type': Syntax.BinaryExpression,
-            'left': expression,
-            'operator': node[OPERATOR].charAt(0),
-            'right': {
-                'type': Syntax.Literal,
-                'value': 1
-            }
-        });
+        blockContext.addAssignment(resultTempName).assign(
+            functionContext.createASTNode(node, {
+                'type': Syntax.BinaryExpression,
+                'left': expression,
+                'operator': node[OPERATOR].charAt(0),
+                'right': {
+                    'type': Syntax.Literal,
+                    'value': 1
+                }
+            })
+        );
 
         // Assignment back to variable/property
-        blockContext.prepareStatement().assign({
-            'type': Syntax.ExpressionStatement,
-            'expression': {
-                'type': Syntax.AssignmentExpression,
-                'left': object ? object : node[ARGUMENT],
-                'operator': '=',
-                'right': {
-                    'type': Syntax.Identifier,
-                    'name': resultTempName
+        blockContext.prepareStatement().assign(
+            functionContext.createASTNode(node, {
+                'type': Syntax.ExpressionStatement,
+                'expression': {
+                    'type': Syntax.AssignmentExpression,
+                    'left': object ? object : node[ARGUMENT],
+                    'operator': '=',
+                    'right': {
+                        'type': Syntax.Identifier,
+                        'name': resultTempName
+                    }
                 }
-            }
-        });
+            })
+        );
 
-        return {
+        // Result of expression will be fetchable via this temporary variable
+        return functionContext.createASTNode(node, {
             'type': Syntax.Identifier,
             'name': node[PREFIX] ?
                 resultTempName :
                 functionContext.getLastTempNameForVariable(node[ARGUMENT][NAME])
-        };
+        });
     }
 });
 

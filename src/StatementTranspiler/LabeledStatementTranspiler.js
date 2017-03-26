@@ -30,15 +30,15 @@ _.extend(LabeledStatementTranspiler.prototype, {
         var label = node[LABEL],
             transpiler = this;
 
-        blockContext.transformNextStatement(function (node) {
-            return {
+        blockContext.transformNextStatement(function (nextStatementNode) {
+            return functionContext.createASTNode(node, {
                 'type': Syntax.LabeledStatement,
                 'label': {
                     'type': Syntax.Identifier,
                     'name': 'label_' + label[NAME]
                 },
-                'body': node
-            };
+                'body': nextStatementNode
+            });
         });
 
         transpiler.statementTranspiler.transpile(node[BODY], node, functionContext, blockContext);

@@ -19,8 +19,9 @@ var _ = require('microdash'),
     LabelableContext = require('./LabelableContext'),
     Syntax = estraverse.Syntax;
 
-function FunctionContext() {
+function FunctionContext(astNode) {
     this.assignmentVariables = {};
+    this.astNode = astNode;
     this.catches = [];
     this.functionDeclarations = [];
     this.hasFinally = false;
@@ -71,6 +72,14 @@ _.extend(FunctionContext.prototype, {
 
     clearLastAssignments: function () {
         this.lastAssignments = [];
+    },
+
+    createASTNode: function (originalNode, newNode) {
+        if (originalNode.loc) {
+            newNode.loc = originalNode.loc;
+        }
+
+        return newNode;
     },
 
     getCurrentStatementIndex: function () {
@@ -152,7 +161,10 @@ _.extend(FunctionContext.prototype, {
                     'kind': 'init',
                     'key': {
                         'type': Syntax.Identifier,
-                        'name': catchData.catchStatementIndex
+                        // Fix "Expected a SourceNode, string, or an array of SourceNodes and strings."
+                        // error from `source-map` via `escodegen`, where a number was being provided
+                        // as the object literal property name
+                        'name': catchData.catchStatementIndex + ''
                     },
                     'value': {
                         type: Syntax.ObjectExpression,
@@ -260,7 +272,7 @@ _.extend(FunctionContext.prototype, {
                     'operator': '=',
                     'left': {
                         'type': Syntax.Identifier,
-                        'name': 'temp' + index,
+                        'name': 'temp' + index
                     },
                     'right': acorn.parse('Resumable._resumeState_.temp' + index).body[0].expression
                 }
@@ -288,7 +300,7 @@ _.extend(FunctionContext.prototype, {
         [].push.apply(statements, functionContext.functionDeclarations);
         statements.push({
             type: Syntax.ReturnStatement,
-            argument: {
+            argument: functionContext.createASTNode(functionContext.astNode, {
                 type: Syntax.CallExpression,
                 arguments: [
                     {
@@ -299,9 +311,9 @@ _.extend(FunctionContext.prototype, {
                         name: 'arguments'
                     }
                 ],
-                callee: {
+                callee: functionContext.createASTNode(functionContext.astNode, {
                     type: Syntax.MemberExpression,
-                    object: {
+                    object: functionContext.createASTNode(functionContext.astNode, {
                         type: Syntax.FunctionExpression,
                         id: {
                             type: Syntax.Identifier,
@@ -420,13 +432,13 @@ _.extend(FunctionContext.prototype, {
                                 }
                             ])
                         }
-                    },
-                    property: {
+                    }),
+                    property: functionContext.createASTNode(functionContext.astNode, {
                         type: Syntax.Identifier,
                         name: 'apply'
-                    }
-                }
-            }
+                    })
+                })
+            })
         });
 
         return statements;

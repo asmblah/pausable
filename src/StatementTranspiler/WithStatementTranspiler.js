@@ -34,16 +34,18 @@ _.extend(WithStatementTranspiler.prototype, {
 
         transpiler.statementTranspiler.transpileArray(node[BODY][BODY], node, functionContext, ownBlockContext);
 
-        statement.assign({
-            'type': Syntax.WithStatement,
-            'object': object,
-            'body': {
-                'type': Syntax.BlockStatement,
-                'body': [
-                    ownBlockContext.getSwitchStatement()
-                ]
-            }
-        });
+        statement.assign(
+            functionContext.createASTNode(node, {
+                'type': Syntax.WithStatement,
+                'object': object,
+                'body': {
+                    'type': Syntax.BlockStatement,
+                    'body': [
+                        ownBlockContext.getSwitchStatement()
+                    ]
+                }
+            })
+        );
     }
 });
 

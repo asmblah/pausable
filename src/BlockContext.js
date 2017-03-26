@@ -14,7 +14,7 @@ var _ = require('microdash'),
     estraverse = require('estraverse'),
     CONSEQUENT = 'consequent',
     Syntax = estraverse.Syntax,
-    createSwitchCase = function createSwitchCase(statementNode, index, nextIndex) {
+    createSwitchCase = function createSwitchCase(context, statementNode, index, nextIndex) {
         var consequent = [statementNode];
 
         if (nextIndex !== null) {
@@ -22,17 +22,22 @@ var _ = require('microdash'),
                 nextIndex = index + 1;
             }
 
-            consequent.push(acorn.parse('statementIndex = ' + nextIndex + ';').body[0]);
+            consequent.push(
+                context.functionContext.createASTNode(
+                    statementNode,
+                    acorn.parse('statementIndex = ' + nextIndex + ';').body[0]
+                )
+            );
         }
 
-        return {
+        return context.functionContext.createASTNode(statementNode, {
             type: Syntax.SwitchCase,
             test: {
                 type: Syntax.Literal,
                 value: index
             },
             consequent: consequent
-        };
+        });
     };
 
 function BlockContext(functionContext) {
@@ -56,6 +61,7 @@ _.extend(BlockContext.prototype, {
                 context.functionContext.addAssignment(index, name);
 
                 context.switchCases[index] = createSwitchCase(
+                    context,
                     {
                         'type': Syntax.ExpressionStatement,
                         'expression': {
@@ -225,7 +231,7 @@ _.extend(BlockContext.prototype, {
                     });
                 }
 
-                switchCases.push(createSwitchCase(statementNode, endIndex - 1, nextIndex));
+                switchCases.push(createSwitchCase(context, statementNode, endIndex - 1, nextIndex));
 
                 context.switchCases[index] = switchCases;
             },

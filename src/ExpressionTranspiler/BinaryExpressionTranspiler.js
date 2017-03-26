@@ -34,12 +34,12 @@ _.extend(BinaryExpressionTranspiler.prototype, {
         left = transpiler.expressionTranspiler.transpile(node[LEFT], node, functionContext, blockContext);
         right = transpiler.expressionTranspiler.transpile(node[RIGHT], node, functionContext, blockContext);
 
-        return {
+        return functionContext.createASTNode(node, {
             'type': Syntax.BinaryExpression,
             'operator': node[OPERATOR],
             'left': left,
             'right': right
-        };
+        });
     }
 });
 

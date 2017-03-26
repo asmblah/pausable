@@ -28,7 +28,7 @@ _.extend(ProgramTranspiler.prototype, {
 
     transpile: function (node) {
         var transpiler = this,
-            functionContext = new FunctionContext(),
+            functionContext = new FunctionContext(node),
             blockContext = new BlockContext(functionContext);
 
         transpiler.statementTranspiler.transpileArray(node[BODY], node, functionContext, blockContext);

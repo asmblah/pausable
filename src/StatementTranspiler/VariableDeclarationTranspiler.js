@@ -43,15 +43,17 @@ _.extend(VariableDeclarationTranspiler.prototype, {
                     blockContext
                 );
 
-                blockContext.prepareStatement().assign({
-                    'type': Syntax.ExpressionStatement,
-                    'expression': {
-                        'type': Syntax.AssignmentExpression,
-                        'operator': '=',
-                        'left': declaration[ID],
-                        'right': expression
-                    }
-                });
+                blockContext.prepareStatement().assign(
+                    functionContext.createASTNode(declaration, {
+                        'type': Syntax.ExpressionStatement,
+                        'expression': {
+                            'type': Syntax.AssignmentExpression,
+                            'operator': '=',
+                            'left': declaration[ID],
+                            'right': expression
+                        }
+                    })
+                );
             }
         });
     }

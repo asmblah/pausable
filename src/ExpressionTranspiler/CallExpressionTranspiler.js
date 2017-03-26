@@ -14,6 +14,7 @@ var _ = require('microdash'),
     ARGUMENTS = 'arguments',
     CALLEE = 'callee',
     OBJECT = 'object',
+    PROPERTY = 'property',
     TYPE = 'type',
     Syntax = estraverse.Syntax;
 
@@ -54,22 +55,22 @@ _.extend(CallExpressionTranspiler.prototype, {
                     node[CALLEE][OBJECT]
             ].concat(args);
 
-            callee = {
+            callee = functionContext.createASTNode(node[CALLEE], {
                 'type': Syntax.MemberExpression,
                 'object': callee,
-                'property': {
+                'property': functionContext.createASTNode(node[CALLEE][PROPERTY], {
                     'type': Syntax.Identifier,
-                    'name': 'call',
-                },
+                    'name': 'call'
+                }),
                 'computed': false
-            };
+            });
         }
 
-        callNode = {
+        callNode = functionContext.createASTNode(node, {
             'type': Syntax.CallExpression,
             'callee': callee,
             'arguments': args
-        };
+        });
 
         if (parent[TYPE] === Syntax.ExpressionStatement) {
             return callNode;
@@ -78,10 +79,11 @@ _.extend(CallExpressionTranspiler.prototype, {
         tempNameForAssignment = functionContext.getTempName();
         blockContext.addAssignment(tempNameForAssignment).assign(callNode);
 
-        return {
+        // Result of function call will be fetchable via this temporary variable
+        return functionContext.createASTNode(node, {
             'type': Syntax.Identifier,
             'name': tempNameForAssignment
-        };
+        });
     }
 });
 

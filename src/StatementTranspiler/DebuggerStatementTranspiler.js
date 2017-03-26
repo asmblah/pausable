@@ -24,9 +24,11 @@ _.extend(DebuggerStatementTranspiler.prototype, {
     },
 
     transpile: function (node, parent, functionContext, blockContext) {
-        blockContext.prepareStatement().assign({
-            'type': Syntax.DebuggerStatement
-        });
+        blockContext.prepareStatement().assign(
+            functionContext.createASTNode(node, {
+                'type': Syntax.DebuggerStatement
+            })
+        );
     }
 });
 

@@ -59,46 +59,51 @@ _.extend(LogicalExpressionTranspiler.prototype, {
             } :
             left;
 
-        statement.assign({
-            'type': Syntax.IfStatement,
-            'test': {
-                'type': Syntax.LogicalExpression,
-                'operator': '||',
-                'left': {
-                    'type': Syntax.BinaryExpression,
-                    'operator': '>',
+        statement.assign(
+            functionContext.createASTNode(node, {
+                'type': Syntax.IfStatement,
+                'test': {
+                    'type': Syntax.LogicalExpression,
+                    'operator': '||',
                     'left': {
-                        'type': Syntax.Identifier,
-                        'name': 'statementIndex'
+                        'type': Syntax.BinaryExpression,
+                        'operator': '>',
+                        'left': {
+                            'type': Syntax.Identifier,
+                            'name': 'statementIndex'
+                        },
+                        'right': {
+                            'type': Syntax.Literal,
+                            'value': statement.getIndex() + 1
+                        }
                     },
-                    'right': {
-                        'type': Syntax.Literal,
-                        'value': statement.getIndex() + 1
-                    }
+                    'right': condition
                 },
-                'right': condition
-            },
-            'consequent': {
-                'type': Syntax.BlockStatement,
-                'body': [
-                    rightSideBlockContext.getSwitchStatement()
-                ]
-            }
-        });
+                'consequent': {
+                    'type': Syntax.BlockStatement,
+                    'body': [
+                        rightSideBlockContext.getSwitchStatement()
+                    ]
+                }
+            })
+        );
 
         tempName = functionContext.getTempName();
 
-        blockContext.addAssignment(tempName).assign({
-            'type': Syntax.LogicalExpression,
-            'operator': node[OPERATOR],
-            'left': left,
-            'right': right
-        });
+        blockContext.addAssignment(tempName).assign(
+            functionContext.createASTNode(node, {
+                'type': Syntax.LogicalExpression,
+                'operator': node[OPERATOR],
+                'left': left,
+                'right': right
+            })
+        );
 
-        return {
+        // Result of expression will be fetchable via this temporary variable
+        return functionContext.createASTNode(node, {
             'type': Syntax.Identifier,
             'name': tempName
-        };
+        });
     }
 });
 

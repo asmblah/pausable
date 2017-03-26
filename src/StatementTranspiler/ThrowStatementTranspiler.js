@@ -27,10 +27,13 @@ _.extend(ThrowStatementTranspiler.prototype, {
     transpile: function (node, parent, functionContext, blockContext) {
         var expression = this.expressionTranspiler.transpile(node[ARGUMENT], node, functionContext, blockContext);
 
-        blockContext.prepareStatement().assign({
-            'type': Syntax.ThrowStatement,
-            'argument': expression
-        }, null);
+        blockContext.prepareStatement().assign(
+            functionContext.createASTNode(node, {
+                'type': Syntax.ThrowStatement,
+                'argument': expression
+            }),
+            null
+        );
     }
 });
 

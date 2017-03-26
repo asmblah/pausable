@@ -12,15 +12,21 @@
 var _ = require('microdash'),
     escodegen = require('escodegen'),
     acorn = require('acorn'),
+    // convertSourceMap = require('convert-source-map'),
+    // sourceMapToAST = require('sourcemap-to-ast'),
+    sourceMapToComment = require('source-map-to-comment'),
     PauseException = require('./PauseException'),
     Promise = require('lie'),
     ResumeException = require('./ResumeException'),
+    SourceMapConsumer = require('source-map').SourceMapConsumer,
+    SourceMapGenerator = require('source-map').SourceMapGenerator,
     FROM = 'from',
     PARAM = 'param',
     STRICT = 'strict',
     TO = 'to';
 
 function Resumable(transpiler) {
+    this.nextAnonymousFileID = 0;
     this.transpiler = transpiler;
 }
 
@@ -162,57 +168,63 @@ _.extend(Resumable.prototype, {
     },
 
     execute: function (code, options) {
-        var ast = acorn.parse(code, {'allowReturnOutsideFunction': true}),
-            expose,
-            func,
-            names = ['Resumable'],
-            resumable = this,
-            transpiledCode,
-            values = [Resumable];
+        var resumable = this,
+            func = resumable.transpile(code, options);
 
-        options = options || {};
-        expose = options.expose || {};
-
-        _.forOwn(expose, function (value, name) {
-            names.push(name);
-            values.push(value);
-        });
-
-        ast = resumable.transpiler.transpile(ast);
-
-        transpiledCode = escodegen.generate(ast, {
-            format: {
-                indent: {
-                    style: '    ',
-                    base: 0
-                }
-            }
-        });
-
-        transpiledCode = 'return ' + transpiledCode;
-
-        if (options[STRICT]) {
-            transpiledCode = '"use strict"; ' + transpiledCode;
-        }
-
-        /*jshint evil:true */
-        func = new Function(names, transpiledCode);
-
-        return resumable.call(func.apply(null, values), [], null);
+        return resumable.call(func, [], null);
     },
 
     executeSync: function (args, fn, options) {
         var code = 'return ' + fn.toString(),
-            ast = acorn.parse(code, {'allowReturnOutsideFunction': true}),
+            resumable = this,
+            func = resumable.transpile(code, options);
+
+        return resumable.callSync(func(), args, null);
+    },
+
+    transpile: function (code, options) {
+        var ast,
+            existingSourceMapMatch,
             expose,
             func,
+            hasPath,
             names = ['Resumable'],
+            output,
+            path,
+            prefixedPath,
             resumable = this,
             transpiledCode,
             values = [Resumable];
 
         options = options || {};
         expose = options.expose || {};
+        hasPath = !!options.path;
+        path = hasPath ? options.path : '<vm ' + (resumable.nextAnonymousFileID++) + '>.js';
+        path = require('path').normalize(path);
+        prefixedPath = path;//'prefix/' + path;//'[[pausable]] ' + path;
+
+        ast = acorn.parse(code, {
+            'allowReturnOutsideFunction': true,
+            'locations': true,
+            'sourceFile': prefixedPath
+        });
+
+        // // Extract any existing source map from the code
+        // // existingSourceMap = convertSourceMap.fromSource(code);
+        // existingSourceMap = code.match(/^\/\/# pausable:sourceMap=(.*)$/);
+        //
+        // // Apply any existing source map mappings to the parsed AST nodes' location data
+        // if (existingSourceMap) {
+        //     sourceMapToAST(ast, existingSourceMap.toObject());
+        // }
+
+        // // Extract any existing source map from the code
+        // existingSourceMapMatch = code.match(/^\/\/# pausable:sourceMap=(.*)$/m);
+        //
+        // // Apply any existing source map mappings to the parsed AST nodes' location data
+        // if (existingSourceMapMatch) {
+        //     sourceMapToAST(ast, JSON.parse(existingSourceMapMatch[1]));
+        // }
 
         _.forOwn(expose, function (value, name) {
             names.push(name);
@@ -221,25 +233,82 @@ _.extend(Resumable.prototype, {
 
         ast = resumable.transpiler.transpile(ast);
 
-        transpiledCode = escodegen.generate(ast, {
+        output = escodegen.generate(ast, {
             format: {
                 indent: {
                     style: '    ',
                     base: 0
                 }
-            }
+            },
+            sourceMap: true,
+            sourceMapWithCode: true
         });
 
-        transpiledCode = 'return ' + transpiledCode;
+        // Extract any existing source map from the code
+        existingSourceMapMatch = code.match(/^\/\/# pausable:sourceMap=(.*)$/m);
+
+        // Apply any existing source map mappings to the parsed AST nodes' location data
+        if (existingSourceMapMatch) {
+            var consumer = new SourceMapConsumer(JSON.parse(existingSourceMapMatch[1])),
+                sourceContent = consumer.sourceContentFor(path, true);
+
+            if (sourceContent !== null) {
+                output.map.setSourceContent(prefixedPath, sourceContent);
+            }
+
+            output.map.applySourceMap(
+                consumer,
+                path
+            );
+
+            // var rawSourceMap = JSON.parse(existingSourceMapMatch[1]),
+            //     consumer = new SourceMapConsumer(_.extend(rawSourceMap, {/*sourceRoot: '[[pausable]]'*/})),
+            //     generator = SourceMapGenerator.fromSourceMap(consumer),
+            //     sourceContent = consumer.sourceContentFor(path, true);
+            //
+            // // if (sourceContent !== null) {
+            // //     generator.setSourceContent(prefixedPath, sourceContent);
+            // // }
+            //
+            // generator.applySourceMap(
+            //     new SourceMapConsumer(output.map.toJSON()),
+            //     path
+            // );
+            //
+            // // FIXME
+            // output = {
+            //     code: output.code,
+            //     map: generator
+            // };
+        }
+
+        if (!hasPath) {
+            // Make sure the code is in the source map
+            output.map.setSourceContent(prefixedPath, code);
+        }
+
+        transpiledCode = 'return ' + output.code;
 
         if (options[STRICT]) {
             transpiledCode = '"use strict"; ' + transpiledCode;
         }
 
-        /*jshint evil:true */
-        func = new Function(names, transpiledCode);
+        // Append a source map comment containing the entire source map data as a data: URI,
+        // in the form `//# sourceMappingURL=data:application/json;base64,...`
+        transpiledCode += '\n\n' + sourceMapToComment(output.map.toJSON()) + '\n';
 
-        return resumable.callSync(func.apply(null, values)(), args, null);
+        // /*jshint evil:true */
+        // func = new Function(names, transpiledCode);
+        //
+        // return func.apply(null, values);
+
+
+        // Use eval(...) rather than the Function constructor, otherwise Chrome's debugger
+        // won't recognise the source map comment
+        /*jshint evil:true */
+        func = (0, eval)('(function (' + names + ') {' + transpiledCode + '})');
+
+        return func.apply(null, values);
     }
 });
 

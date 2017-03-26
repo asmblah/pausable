@@ -35,12 +35,12 @@ _.extend(MemberExpressionTranspiler.prototype, {
                 node[PROPERTY],
             propertyTempName;
 
-        memberExpression = {
+        memberExpression = functionContext.createASTNode(node, {
             'type': Syntax.MemberExpression,
             'object': object,
             'property': property,
             'computed': node[COMPUTED]
-        };
+        });
 
         if (parent[TYPE] === Syntax.AssignmentExpression) {
             return memberExpression;
@@ -50,10 +50,11 @@ _.extend(MemberExpressionTranspiler.prototype, {
 
         blockContext.addAssignment(propertyTempName).assign(memberExpression);
 
-        return {
+        // Result of expression will be fetchable via this temporary variable
+        return functionContext.createASTNode(node, {
             'type': Syntax.Identifier,
             'name': propertyTempName
-        };
+        });
     }
 });
 

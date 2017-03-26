@@ -35,7 +35,7 @@ _.extend(BlockStatementTranspiler.prototype, {
         statement.assign({
             'type': Syntax.BlockStatement,
             'body': [
-                ownBlockContext.getSwitchStatement()
+                functionContext.createASTNode(node, ownBlockContext.getSwitchStatement())
             ]
         });
     }

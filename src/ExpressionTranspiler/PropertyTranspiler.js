@@ -29,7 +29,7 @@ _.extend(PropertyTranspiler.prototype, {
     transpile: function (node, parent, functionContext, blockContext) {
         var transpiler = this;
 
-        return {
+        return functionContext.createASTNode(node, {
             'type': Syntax.Property,
             'key': node[KEY],
             'value': transpiler.expressionTranspiler.transpile(
@@ -39,7 +39,7 @@ _.extend(PropertyTranspiler.prototype, {
                 blockContext
             ),
             'kind': node[KIND]
-        };
+        });
     }
 });
 

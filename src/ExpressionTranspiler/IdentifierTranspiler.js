@@ -33,12 +33,12 @@ _.extend(IdentifierTranspiler.prototype, {
                 node === parent[LEFT]
             );
 
-        return {
+        return functionContext.createASTNode(node, {
             'type': Syntax.Identifier,
             'name': isDefined ?
                 node[NAME] :
                 functionContext.getTempNameForVariable(node[NAME], blockContext)
-        };
+        });
     }
 });
 

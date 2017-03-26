@@ -28,7 +28,7 @@ _.extend(FunctionTranspiler.prototype, {
     transpile: function (node) {
         var newNode,
             transpiler = this,
-            ownFunctionContext = new FunctionContext(),
+            ownFunctionContext = new FunctionContext(node),
             ownBlockContext = new BlockContext(ownFunctionContext),
             statements = [];
 
@@ -41,7 +41,7 @@ _.extend(FunctionTranspiler.prototype, {
             statements = ownFunctionContext.getStatements(ownBlockContext.getSwitchStatement());
         }
 
-        newNode = {
+        newNode = ownFunctionContext.createASTNode(node, {
             'type': node[TYPE],
             'id': node[ID],
             'params': node[PARAMS],
@@ -49,7 +49,7 @@ _.extend(FunctionTranspiler.prototype, {
                 'type': Syntax.BlockStatement,
                 'body': statements
             }
-        };
+        });
 
         return newNode;
     }
