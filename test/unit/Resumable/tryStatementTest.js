@@ -169,13 +169,22 @@ EOS
         },
         'try with only finally block when no error is thrown': {
             code: nowdoc(function () {/*<<<EOS
+exports.out = 'start';
+
 exports.first = giveMeAsync(1);
+exports.out += ' first';
 try {
+    exports.out += ' second';
     exports.second = giveMeAsync(2);
+    exports.out += ' third';
 } finally {
+    exports.out += ' fourth';
     exports.third = giveMeAsync(3);
+    exports.out += ' fifth';
 }
+exports.out += ' sixth';
 exports.fourth = giveMeAsync(4);
+exports.out += ' seventh';
 EOS
 */;}), // jshint ignore:line
             expose: function (state) {
@@ -195,7 +204,8 @@ EOS
                 first: 1,
                 second: 2,
                 third: 3,
-                fourth: 4
+                fourth: 4,
+                out: 'start first second third fourth fifth sixth seventh'
             }
         },
         'try with both catch and finally blocks when error is rethrown': {
