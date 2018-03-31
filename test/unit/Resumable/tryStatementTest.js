@@ -98,6 +98,195 @@ EOS
                 third: true
             }
         },
+        'try that makes a call that then pauses and resumes successfully': {
+            code: nowdoc(function () {/*<<<EOS
+function goFetchAsyncThenAdd4(what) {
+    return giveMeAsync(what) + 4;
+}
+
+Object.assign(exports, {
+    first: 0,
+    second: 0,
+    third: 0,
+    fourth: 0,
+    fifth: 0
+});
+
+exports.first++;
+try {
+    exports.second++;
+    return goFetchAsyncThenAdd4(21);
+    exports.third++;
+} catch (error) {
+    exports.fourth++;
+}
+exports.fifth++;
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedExports: {
+                first: 1,
+                second: 1,
+                third: 0,
+                fourth: 0,
+                fifth: 0
+            },
+            expectedResult: 25
+        },
+        'try that pauses but throws': {
+            code: nowdoc(function () {/*<<<EOS
+Object.assign(exports, {
+    first: 0,
+    second: 0,
+    third: 0,
+    fourth: 0,
+    fifth: 0
+});
+
+exports.first++;
+try {
+    exports.second++;
+    throwAsync(new Error("Bang!"));
+    exports.third++;
+} catch (error) {
+    exports.fourth++;
+}
+exports.fifth++;
+return 'error caught successfully';
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    throwAsync: function (error) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.throw(error);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedExports: {
+                first: 1,
+                second: 1,
+                third: 0,
+                fourth: 1,
+                fifth: 1
+            },
+            expectedResult: 'error caught successfully'
+        },
+        'try that makes a call that then pauses but throws': {
+            code: nowdoc(function () {/*<<<EOS
+function goAndFailToFetchAsync() {
+    return throwAsync(new Error("Bang!"));
+}
+
+Object.assign(exports, {
+    first: 0,
+    second: 0,
+    third: 0,
+    fourth: 0,
+    fifth: 0
+});
+
+exports.first++;
+try {
+    exports.second++;
+    return goAndFailToFetchAsync(21);
+    exports.third++;
+} catch (error) {
+    exports.fourth++;
+}
+exports.fifth++;
+return 'error caught successfully';
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    throwAsync: function (error) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.throw(error);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedExports: {
+                first: 1,
+                second: 1,
+                third: 0,
+                fourth: 1,
+                fifth: 1
+            },
+            expectedResult: 'error caught successfully'
+        },
+        'try that contains and calls a function expression that then pauses but throws': {
+            code: nowdoc(function () {/*<<<EOS
+function goAndThrow() {
+    throwAsync(new Error("Bang!"));
+}
+
+Object.assign(exports, {
+    first: 0,
+    second: 0,
+    third: 0,
+    fourth: 0,
+    fifth: 0
+});
+
+exports.first++;
+try {
+    exports.second++;
+    return function () {
+        goAndThrow();
+    }();
+    exports.third++;
+} catch (error) {
+    exports.fourth++;
+}
+exports.fifth++;
+return 'error caught successfully';
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    throwAsync: function (error) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.throw(error);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedExports: {
+                first: 1,
+                second: 1,
+                third: 0,
+                fourth: 1,
+                fifth: 1
+            },
+            expectedResult: 'error caught successfully'
+        },
         'try with both catch and finally blocks when an error is thrown': {
             code: nowdoc(function () {/*<<<EOS
 exports.first = true;

@@ -74,15 +74,25 @@ _.extend(Resumable.prototype, {
                     state;
 
                 if (error) {
+                    // We're resuming by throwing an error, ie. `pause.throw(...)`
+
                     /*jshint loopfunc: true */
                     for (; i < states.length; i++) {
                         state = states[i];
 
+                        /*
+                         * See whether any `catch` clauses in this stack frame state's function
+                         * contain a catch that can handle the error that was thrown
+                         * (ie. whether the error was thrown from inside a `try` statement)
+                         */
                         _.each(state.catches, function (data, catchStatementIndex) {
+                            // "From" and "to" are the start and end statement indexes
+                            // for the body of the `try` (excluding the `catch` or `finally`)
                             if (state.statementIndex < data[FROM] || state.statementIndex > data[TO]) {
                                 return;
                             }
 
+                            // Jump to the `catch` clause to handle the error
                             state.statementIndex = catchStatementIndex * 1;
                             state[data[PARAM]] = error;
                             error = null;
@@ -90,6 +100,8 @@ _.extend(Resumable.prototype, {
                             Resumable._resumeState_ = state;
 
                             try {
+                                // We've modified the state to make it jump inside the `catch` clause -
+                                // now call the wrapper function so that it can resume execution there
                                 lastResult = state.func();
                             } catch (e) {
                                 if (e instanceof PauseException) {
@@ -114,6 +126,9 @@ _.extend(Resumable.prototype, {
                         reject(error);
                         return;
                     }
+
+                    // Skip over the `catch` block that handled the error
+                    i++;
                 }
 
                 function handleNextState() {
