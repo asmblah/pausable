@@ -102,7 +102,7 @@ _.extend(UpdateExpressionTranspiler.prototype, {
             'type': Syntax.Identifier,
             'name': node[PREFIX] ?
                 resultTempName :
-                functionContext.getLastTempNameForVariable(node[ARGUMENT][NAME])
+                objectTempName || functionContext.getLastTempNameForVariable(node[ARGUMENT][NAME])
         };
     }
 });
