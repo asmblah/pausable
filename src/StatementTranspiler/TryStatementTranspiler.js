@@ -45,6 +45,10 @@ _.extend(TryStatementTranspiler.prototype, {
             tryNode,
             tryStartIndex;
 
+        if (finalizer) {
+            functionContext.enterTryWithFinallyClause();
+        }
+
         statement = blockContext.prepareStatement();
 
         tryStartIndex = functionContext.getCurrentStatementIndex();
@@ -148,7 +152,7 @@ _.extend(TryStatementTranspiler.prototype, {
         };
 
         if (finalizer) {
-            functionContext.addFinally();
+            functionContext.enterTryFinallyClause();
 
             catchStatements.splice(1, 0, {
                 'type': Syntax.ExpressionStatement,
@@ -261,11 +265,43 @@ _.extend(TryStatementTranspiler.prototype, {
                     },
                     'alternate': null
                 });
+
+                if (functionContext.hasReturnInTryOutsideFinally()) {
+                    finallyStatements.push({
+                        'type': Syntax.IfStatement,
+                        'test': {
+                            /*
+                             * If no value has been returned, the result will be undefined,
+                             * so the default of `undefined` for this var will work fine.
+                             *
+                             * If an error has been thrown, we won't want to cancel that by returning
+                             * from inside the finally clause, but that will have been handled at this point
+                             * by the re-throw just above here.
+                             */
+                            'type': Syntax.Identifier,
+                            'name': 'resumableReturnValue'
+                        },
+                        'consequent': {
+                            'type': Syntax.BlockStatement,
+                            'body': [{
+                                'type': Syntax.ReturnStatement,
+                                'argument': {
+                                    'type': Syntax.Identifier,
+                                    'name': 'resumableReturnValue'
+                                }
+                            }]
+                        },
+                        'alternate': null
+                    });
+                }
+
                 tryNode[FINALIZER] = {
                     'type': Syntax.BlockStatement,
                     'body': finallyStatements
                 };
             }());
+
+            functionContext.leaveTryFinallyClause();
         }
 
         catchStatements.unshift({

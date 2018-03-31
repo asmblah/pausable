@@ -497,7 +497,7 @@ EOS
         })).to.equal(expectedOutputJS);
     });
 
-    it('should correctly transpile when there is no catch block, only finally', function () {
+    it('should correctly transpile when there is no catch block, only a nested finally', function () {
         var inputJS = nowdoc(function () {/*<<<EOS
 a = 1;
 try {
@@ -625,6 +625,189 @@ EOS
             case 12:
                 h = 8;
                 statementIndex = 13;
+            }
+        } catch (e) {
+            if (e instanceof Resumable.PauseException) {
+                e.add({
+                    func: resumableScope,
+                    statementIndex: statementIndex + 1,
+                    assignments: {}
+                });
+            }
+            throw e;
+        }
+    }.apply(this, arguments);
+});
+EOS
+*/;}), // jshint ignore:line
+            ast = acorn.parse(inputJS, {'allowReturnOutsideFunction': true});
+
+        ast = transpiler.transpile(ast);
+
+        expect(escodegen.generate(ast, {
+            format: {
+                indent: {
+                    style: '    ',
+                    base: 0
+                }
+            }
+        })).to.equal(expectedOutputJS);
+    });
+
+    it('should correctly transpile when there is a return inside the try clause', function () {
+        var inputJS = nowdoc(function () {/*<<<EOS
+a = 1;
+try {
+    return 21;
+} finally {
+    c = 3;
+}
+d = 4;
+EOS
+*/;}), // jshint ignore:line
+            expectedOutputJS = nowdoc(function () {/*<<<EOS
+(function () {
+    var statementIndex = 0, resumableReturnValue, resumableUncaughtError;
+    return function resumableScope() {
+        var resumablePause = null;
+        if (Resumable._resumeState_) {
+            statementIndex = Resumable._resumeState_.statementIndex;
+            Resumable._resumeState_ = null;
+        }
+        try {
+            switch (statementIndex) {
+            case 0:
+                a = 1;
+                statementIndex = 1;
+            case 1:
+                statementIndex = 2;
+            case 2:
+            case 3:
+                try {
+                    switch (statementIndex) {
+                    case 2:
+                        return resumableReturnValue = 21;
+                        statementIndex = 3;
+                    }
+                } catch (resumableError) {
+                    if (resumableError instanceof Resumable.PauseException) {
+                        resumablePause = resumableError;
+                        throw resumableError;
+                    }
+                    resumableUncaughtError = resumableError;
+                } finally {
+                    if (resumablePause) {
+                        throw resumablePause;
+                    }
+                    if (statementIndex >= 2 && statementIndex < 3) {
+                        statementIndex = 3;
+                    }
+                    switch (statementIndex) {
+                    case 3:
+                        c = 3;
+                        statementIndex = 4;
+                    }
+                    if (resumableUncaughtError) {
+                        throw resumableUncaughtError;
+                    }
+                    if (resumableReturnValue) {
+                        return resumableReturnValue;
+                    }
+                }
+                statementIndex = 4;
+            case 4:
+                d = 4;
+                statementIndex = 5;
+            }
+        } catch (e) {
+            if (e instanceof Resumable.PauseException) {
+                e.add({
+                    func: resumableScope,
+                    statementIndex: statementIndex + 1,
+                    assignments: {}
+                });
+            }
+            throw e;
+        }
+    }.apply(this, arguments);
+});
+EOS
+*/;}), // jshint ignore:line
+            ast = acorn.parse(inputJS, {'allowReturnOutsideFunction': true});
+
+        ast = transpiler.transpile(ast);
+
+        expect(escodegen.generate(ast, {
+            format: {
+                indent: {
+                    style: '    ',
+                    base: 0
+                }
+            }
+        })).to.equal(expectedOutputJS);
+    });
+
+    it('should correctly transpile when there is a return after the entire try statement', function () {
+        var inputJS = nowdoc(function () {/*<<<EOS
+a = 1;
+try {
+    b = 2;
+} finally {
+    c = 3;
+}
+return 'my result';
+EOS
+*/;}), // jshint ignore:line
+            expectedOutputJS = nowdoc(function () {/*<<<EOS
+(function () {
+    var statementIndex = 0, resumableUncaughtError;
+    return function resumableScope() {
+        var resumablePause = null;
+        if (Resumable._resumeState_) {
+            statementIndex = Resumable._resumeState_.statementIndex;
+            Resumable._resumeState_ = null;
+        }
+        try {
+            switch (statementIndex) {
+            case 0:
+                a = 1;
+                statementIndex = 1;
+            case 1:
+                statementIndex = 2;
+            case 2:
+            case 3:
+                try {
+                    switch (statementIndex) {
+                    case 2:
+                        b = 2;
+                        statementIndex = 3;
+                    }
+                } catch (resumableError) {
+                    if (resumableError instanceof Resumable.PauseException) {
+                        resumablePause = resumableError;
+                        throw resumableError;
+                    }
+                    resumableUncaughtError = resumableError;
+                } finally {
+                    if (resumablePause) {
+                        throw resumablePause;
+                    }
+                    if (statementIndex >= 2 && statementIndex < 3) {
+                        statementIndex = 3;
+                    }
+                    switch (statementIndex) {
+                    case 3:
+                        c = 3;
+                        statementIndex = 4;
+                    }
+                    if (resumableUncaughtError) {
+                        throw resumableUncaughtError;
+                    }
+                }
+                statementIndex = 4;
+            case 4:
+                return 'my result';
+                statementIndex = 5;
             }
         } catch (e) {
             if (e instanceof Resumable.PauseException) {

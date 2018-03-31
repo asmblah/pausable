@@ -29,6 +29,23 @@ _.extend(ReturnStatementTranspiler.prototype, {
             this.expressionTranspiler.transpile(node[ARGUMENT], node, functionContext, blockContext) :
             null;
 
+        if (functionContext.isInsideTryWithFinallyClause() && !functionContext.isInsideTryFinallyClause()) {
+            functionContext.addReturnInTryOutsideFinally();
+
+            // The surrounding function has a try with a finally clause, so make sure
+            // we store the return value in the special `resumableReturnValue` variable
+            // so that it may be re-returned if a pause is made inside the finally clause
+            expression = {
+                'type': Syntax.AssignmentExpression,
+                'left': {
+                    'type': Syntax.Identifier,
+                    'name': 'resumableReturnValue'
+                },
+                'operator': '=',
+                'right': expression
+            };
+        }
+
         blockContext.prepareStatement().assign({
             'type': Syntax.ReturnStatement,
             'argument': expression

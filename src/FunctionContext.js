@@ -23,7 +23,6 @@ function FunctionContext() {
     this.assignmentVariables = {};
     this.catches = [];
     this.functionDeclarations = [];
-    this.hasFinally = false;
     this.labelableContext = null;
     this.labelableContextStack = [];
     this.lastAssignments = [];
@@ -31,6 +30,10 @@ function FunctionContext() {
     this.nextStatementIndex = 0;
     this.nextTempIndex = 0;
     this.parameters = [];
+    this.returnInTryOutsideFinally = false;
+    this.tryFinallyClauseDepth = 0;
+    this.tryWithFinallyClause = false;
+    this.tryWithFinallyClauseDepth = 0;
     this.variables = [];
 }
 
@@ -46,23 +49,27 @@ _.extend(FunctionContext.prototype, {
         this.catches.push(data);
     },
 
-    addFinally: function () {
-        var context = this;
-
-        if (context.hasFinally) {
-            return;
-        }
-
-        context.addVariable('resumableUncaughtError');
-        context.hasFinally = true;
-    },
-
     addFunctionDeclaration: function (declaration) {
         this.functionDeclarations.push(declaration);
     },
 
     addParameter: function (name) {
         this.parameters.push(name);
+    },
+
+    /**
+     * Marks the current function as having a return statement.
+     * If the return statement is inside a `try..finally`,
+     * then the special `resumableReturnValue` variable will be added to the transpiled output.
+     */
+    addReturnInTryOutsideFinally: function () {
+        var context = this;
+
+        if (context.tryWithFinallyClauseDepth > 0) {
+            context.addVariable('resumableReturnValue');
+        }
+
+        context.returnInTryOutsideFinally = true;
     },
 
     addVariable: function (name) {
@@ -75,6 +82,27 @@ _.extend(FunctionContext.prototype, {
 
     getCurrentStatementIndex: function () {
         return this.nextStatementIndex;
+    },
+
+    /**
+     * Called when the transpiler enters the `finally` clause of a `try` statement
+     */
+    enterTryFinallyClause: function () {
+        this.tryFinallyClauseDepth++;
+    },
+
+    /**
+     * Called when the transpiler first enters a `try` statement that contains a `finally` clause
+     */
+    enterTryWithFinallyClause: function () {
+        var context = this;
+
+        if (context.tryWithFinallyClauseDepth === 0) {
+            context.addVariable('resumableUncaughtError');
+            context.tryWithFinallyClause = true;
+        }
+
+        context.tryWithFinallyClauseDepth++;
     },
 
     getLabel: function () {
@@ -132,6 +160,9 @@ _.extend(FunctionContext.prototype, {
             statements = [],
             stateProperties = [],
             stateSetup = acorn.parse('if (Resumable._resumeState_) { statementIndex = Resumable._resumeState_.statementIndex; }').body[0];
+
+        // Make sure the variables are always output in alphabetical order, for consistency
+        functionContext.variables.sort();
 
         _.each(functionContext.variables, function (name) {
             declaration[DECLARATIONS].push({
@@ -212,7 +243,7 @@ _.extend(FunctionContext.prototype, {
             });
         }
 
-        if (functionContext.hasFinally) {
+        if (functionContext.tryWithFinallyClause) {
             functionSetup.push({
                 'type': Syntax.VariableDeclaration,
                 'declarations': [{
@@ -467,6 +498,15 @@ _.extend(FunctionContext.prototype, {
         return context.lastTempNames[variableName];
     },
 
+    /**
+     * Returns true if this function contains a return statement, false otherwise
+     *
+     * @return {boolean}
+     */
+    hasReturnInTryOutsideFinally: function () {
+        return this.returnInTryOutsideFinally;
+    },
+
     hasVariableDefined: function (name) {
         var isDefined = false;
 
@@ -484,6 +524,35 @@ _.extend(FunctionContext.prototype, {
         });
 
         return isDefined;
+    },
+
+    /**
+     * Determines whether the transpiler is currently inside the `finally` clause of a `try` statement
+     *
+     * @return {boolean}
+     */
+    isInsideTryFinallyClause: function () {
+        return this.tryFinallyClauseDepth > 0;
+    },
+
+    /**
+     * Determines whether the transpiler is currently anywhere inside a `try` statement
+     * that also contains a `finally` clause (including inside the `finally` clause itself)
+     *
+     * @return {boolean}
+     */
+    isInsideTryWithFinallyClause: function () {
+        return this.tryWithFinallyClauseDepth > 0;
+    },
+
+    /**
+     * Called when the transpiler leaves the `finally` clause of a `try` statement
+     */
+    leaveTryFinallyClause: function () {
+        var context = this;
+
+        context.tryFinallyClauseDepth--;
+        context.tryWithFinallyClauseDepth--;
     },
 
     popLabelableContext: function () {

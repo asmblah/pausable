@@ -362,6 +362,39 @@ EOS
                 seventh: 7
             },
             expectedResult: 'my final result'
+        },
+        'return inside try when finally clause pauses': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = giveMeAsync(1);
+try {
+    exports.second = giveMeAsync(2);
+    return giveMeAsync('my result from inside the try');
+    exports.third = giveMeAsync(3);
+} finally {
+    exports.fourth = giveMeAsync(4);
+}
+exports.fifth = giveMeAsync(5);
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedExports: {
+                first: 1,
+                second: 2,
+                fourth: 4
+            },
+            expectedResult: 'my result from inside the try'
         }
     }, tools.check);
 });
