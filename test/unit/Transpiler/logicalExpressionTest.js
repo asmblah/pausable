@@ -80,7 +80,7 @@ EOS
                 temp7 = myArg;
                 statementIndex = 9;
             case 9:
-                temp8 = temp6.call(temp5, temp7);
+                temp8 = (Resumable.checkCallable('(... || ...).start', temp6), temp6.call(temp5, temp7));
                 statementIndex = 10;
             case 10:
                 temp0.result = temp8;
@@ -191,7 +191,7 @@ EOS
                 temp7 = myArg;
                 statementIndex = 9;
             case 9:
-                temp8 = temp6.call(temp5, temp7);
+                temp8 = (Resumable.checkCallable('(... && ...).start', temp6), temp6.call(temp5, temp7));
                 statementIndex = 10;
             case 10:
                 temp0.result = temp8;

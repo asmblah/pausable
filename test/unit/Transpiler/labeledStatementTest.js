@@ -63,7 +63,7 @@ EOS
                         temp0 = print;
                         statementIndex = 2;
                     case 2:
-                        temp0(1);
+                        Resumable.checkCallable('print', temp0), temp0(1);
                         statementIndex = 3;
                     case 3:
                         statementIndex = 4;
@@ -76,7 +76,7 @@ EOS
                                 temp1 = print;
                                 statementIndex = 5;
                             case 5:
-                                temp1(2);
+                                Resumable.checkCallable('print', temp1), temp1(2);
                                 statementIndex = 6;
                             case 6:
                                 break label_my_block;
@@ -87,7 +87,7 @@ EOS
                         temp2 = print;
                         statementIndex = 8;
                     case 8:
-                        temp2(3);
+                        Resumable.checkCallable('print', temp2), temp2(3);
                         statementIndex = 9;
                     }
                 }

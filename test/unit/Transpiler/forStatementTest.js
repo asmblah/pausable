@@ -48,7 +48,7 @@ EOS
                 temp0 = print;
                 statementIndex = 1;
             case 1:
-                temp0(1);
+                Resumable.checkCallable('print', temp0), temp0(1);
                 statementIndex = 2;
             case 2:
                 statementIndex = 3;
@@ -60,7 +60,7 @@ EOS
                         temp1 = print;
                         statementIndex = 4;
                     case 4:
-                        temp1(2);
+                        Resumable.checkCallable('print', temp1), temp1(2);
                         statementIndex = 5;
                     }
                     statementIndex = 3;
@@ -70,7 +70,7 @@ EOS
                 temp2 = print;
                 statementIndex = 6;
             case 6:
-                temp2(3);
+                Resumable.checkCallable('print', temp2), temp2(3);
                 statementIndex = 7;
             }
         } catch (e) {
@@ -140,13 +140,13 @@ EOS
                 temp0 = print;
                 statementIndex = 1;
             case 1:
-                temp0(1);
+                Resumable.checkCallable('print', temp0), temp0(1);
                 statementIndex = 2;
             case 2:
                 temp1 = getStart;
                 statementIndex = 3;
             case 3:
-                temp2 = temp1();
+                temp2 = (Resumable.checkCallable('getStart', temp1), temp1());
                 statementIndex = 4;
             case 4:
                 i = temp2, j = 1;
@@ -177,7 +177,7 @@ EOS
                             temp4 = print;
                             statementIndex = 9;
                         case 9:
-                            temp4(2);
+                            Resumable.checkCallable('print', temp4), temp4(2);
                             statementIndex = 10;
                         case 10:
                             break label0;
@@ -201,7 +201,7 @@ EOS
                 temp7 = print;
                 statementIndex = 16;
             case 16:
-                temp7(3);
+                Resumable.checkCallable('print', temp7), temp7(3);
                 statementIndex = 17;
             }
         } catch (e) {
@@ -293,13 +293,13 @@ EOS
                 temp0 = print;
                 statementIndex = 1;
             case 1:
-                temp0(1);
+                Resumable.checkCallable('print', temp0), temp0(1);
                 statementIndex = 2;
             case 2:
                 temp1 = getStart;
                 statementIndex = 3;
             case 3:
-                temp2 = temp1();
+                temp2 = (Resumable.checkCallable('getStart', temp1), temp1());
                 statementIndex = 4;
             case 4:
                 i = temp2;
@@ -345,13 +345,13 @@ EOS
                             temp4 = print;
                             statementIndex = 9;
                         case 9:
-                            temp4(2);
+                            Resumable.checkCallable('print', temp4), temp4(2);
                             statementIndex = 10;
                         case 10:
                             temp5 = getSecondStart;
                             statementIndex = 11;
                         case 11:
-                            temp6 = temp5();
+                            temp6 = (Resumable.checkCallable('getSecondStart', temp5), temp5());
                             statementIndex = 12;
                         case 12:
                             j = temp6;
@@ -382,7 +382,7 @@ EOS
                                         temp8 = print;
                                         statementIndex = 17;
                                     case 17:
-                                        temp8(3);
+                                        Resumable.checkCallable('print', temp8), temp8(3);
                                         statementIndex = 18;
                                     case 18:
                                         break label1;
@@ -406,7 +406,7 @@ EOS
                             temp11 = print;
                             statementIndex = 24;
                         case 24:
-                            temp11(4);
+                            Resumable.checkCallable('print', temp11), temp11(4);
                             statementIndex = 25;
                         case 25:
                             break label0;
@@ -430,7 +430,7 @@ EOS
                 temp14 = print;
                 statementIndex = 31;
             case 31:
-                temp14(5);
+                Resumable.checkCallable('print', temp14), temp14(5);
                 statementIndex = 32;
             }
         } catch (e) {
@@ -554,7 +554,7 @@ EOS
                             temp1 = print;
                             statementIndex = 5;
                         case 5:
-                            temp1(1);
+                            Resumable.checkCallable('print', temp1), temp1(1);
                             statementIndex = 6;
                         case 6:
                             statementIndex = 7;
@@ -567,7 +567,7 @@ EOS
                                     temp2 = print;
                                     statementIndex = 8;
                                 case 8:
-                                    temp2(2);
+                                    Resumable.checkCallable('print', temp2), temp2(2);
                                     statementIndex = 9;
                                 case 9:
                                     break label_my_block;
@@ -578,7 +578,7 @@ EOS
                             temp3 = print;
                             statementIndex = 11;
                         case 11:
-                            temp3(3);
+                            Resumable.checkCallable('print', temp3), temp3(3);
                             statementIndex = 12;
                         case 12:
                             temp4 = i;
@@ -663,7 +663,7 @@ EOS
                 temp0 = getStart;
                 statementIndex = 1;
             case 1:
-                temp1 = temp0();
+                temp1 = (Resumable.checkCallable('getStart', temp0), temp0());
                 statementIndex = 2;
             case 2:
                 i = temp1;
@@ -688,7 +688,7 @@ EOS
                             temp2 = print;
                             statementIndex = 6;
                         case 6:
-                            temp2('inside');
+                            Resumable.checkCallable('print', temp2), temp2('inside');
                             statementIndex = 7;
                         case 7:
                             temp3 = i + 1;
@@ -772,7 +772,7 @@ EOS
                 temp0 = getStart;
                 statementIndex = 1;
             case 1:
-                temp1 = temp0();
+                temp1 = (Resumable.checkCallable('getStart', temp0), temp0());
                 statementIndex = 2;
             case 2:
                 i = temp1;
@@ -800,7 +800,7 @@ EOS
                             temp2 = one;
                             statementIndex = 6;
                         case 6:
-                            temp2();
+                            Resumable.checkCallable('one', temp2), temp2();
                             statementIndex = 7;
                         case 7:
                             statementIndex = 10;
@@ -809,7 +809,7 @@ EOS
                             temp3 = two;
                             statementIndex = 9;
                         case 9:
-                            temp3();
+                            Resumable.checkCallable('two', temp3), temp3();
                             statementIndex = 10;
                         case 10:
                             temp4 = i + 1;

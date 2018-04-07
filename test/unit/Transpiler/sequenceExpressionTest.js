@@ -47,19 +47,19 @@ EOS
                 temp0 = print;
                 statementIndex = 1;
             case 1:
-                temp1 = temp0(1);
+                temp1 = (Resumable.checkCallable('print', temp0), temp0(1));
                 statementIndex = 2;
             case 2:
                 temp2 = print;
                 statementIndex = 3;
             case 3:
-                temp3 = temp2(2);
+                temp3 = (Resumable.checkCallable('print', temp2), temp2(2));
                 statementIndex = 4;
             case 4:
                 temp4 = print;
                 statementIndex = 5;
             case 5:
-                temp5 = temp4(3);
+                temp5 = (Resumable.checkCallable('print', temp4), temp4(3));
                 statementIndex = 6;
             case 6:
                 temp1, temp3, temp5;

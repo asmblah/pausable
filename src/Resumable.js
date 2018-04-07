@@ -27,7 +27,22 @@ function Resumable(transpiler) {
 _.extend(Resumable, {
     _resumeState_: null,
     PauseException: PauseException,
-    ResumeException: ResumeException
+    ResumeException: ResumeException,
+
+    /**
+     * Checks whether the provided value is callable, throwing a readable error
+     * if it is not, to improve the debugging experience
+     *
+     * @TODO: Factor this out into a Runtime class
+     *
+     * @param {string} name
+     * @param {*} callable
+     */
+    checkCallable: function (name, callable) {
+        if (typeof callable !== 'function') {
+            throw new TypeError(name + ' is not a function');
+        }
+    }
 });
 
 _.extend(Resumable.prototype, {
