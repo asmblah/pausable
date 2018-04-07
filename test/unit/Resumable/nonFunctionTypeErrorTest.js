@@ -28,10 +28,7 @@ return first.second.third.fourth(21);
 EOS
 */;}), // jshint ignore:line
             expectedError: new TypeError('first.second.third.fourth is not a function')
-        }
-    }, tools.check);
-
-    _.each({
+        },
         'trying to call a logical expression result that is not callable': {
             code: nowdoc(function () {/*<<<EOS
 var first = {
