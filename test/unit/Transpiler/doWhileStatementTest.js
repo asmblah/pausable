@@ -50,7 +50,7 @@ EOS
                 temp0 = print;
                 statementIndex = 1;
             case 1:
-                temp0(1);
+                Resumable.checkCallable('print', temp0), temp0(1);
                 statementIndex = 2;
             case 2:
                 statementIndex = 3;
@@ -67,7 +67,7 @@ EOS
                             temp1 = print;
                             statementIndex = 4;
                         case 4:
-                            temp1(2);
+                            Resumable.checkCallable('print', temp1), temp1(2);
                             statementIndex = 5;
                         case 5:
                             break label0;
@@ -86,7 +86,7 @@ EOS
                 temp3 = print;
                 statementIndex = 9;
             case 9:
-                temp3(3);
+                Resumable.checkCallable('print', temp3), temp3(3);
                 statementIndex = 10;
             }
         } catch (e) {
@@ -154,7 +154,7 @@ EOS
                 temp0 = print;
                 statementIndex = 1;
             case 1:
-                temp0(1);
+                Resumable.checkCallable('print', temp0), temp0(1);
                 statementIndex = 2;
             case 2:
                 statementIndex = 3;
@@ -171,7 +171,7 @@ EOS
                             temp1 = print;
                             statementIndex = 4;
                         case 4:
-                            temp1(2);
+                            Resumable.checkCallable('print', temp1), temp1(2);
                             statementIndex = 5;
                         case 5:
                             continue label_my_block;
@@ -190,7 +190,7 @@ EOS
                 temp3 = print;
                 statementIndex = 9;
             case 9:
-                temp3(3);
+                Resumable.checkCallable('print', temp3), temp3(3);
                 statementIndex = 10;
             }
         } catch (e) {

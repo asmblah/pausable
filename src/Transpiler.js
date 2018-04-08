@@ -34,6 +34,7 @@ var _ = require('microdash'),
     MemberExpressionTranspiler = require('./ExpressionTranspiler/MemberExpressionTranspiler'),
     ObjectExpressionTranspiler = require('./ExpressionTranspiler/ObjectExpressionTranspiler'),
     ProgramTranspiler = require('./StatementTranspiler/ProgramTranspiler'),
+    ReferenceStringifier = require('./ReferenceStringifier'),
     PropertyTranspiler = require('./ExpressionTranspiler/PropertyTranspiler'),
     ReturnStatementTranspiler = require('./StatementTranspiler/ReturnStatementTranspiler'),
     SequenceExpressionTranspiler = require('./ExpressionTranspiler/SequenceExpressionTranspiler'),
@@ -48,7 +49,8 @@ var _ = require('microdash'),
 function Transpiler() {
     var expressionTranspiler = new ExpressionTranspiler(),
         statementTranspiler = new StatementTranspiler(),
-        functionTranspiler = new FunctionTranspiler(statementTranspiler);
+        functionTranspiler = new FunctionTranspiler(statementTranspiler),
+        referenceStringifier = new ReferenceStringifier();
 
     _.each([
         BlockStatementTranspiler,
@@ -93,7 +95,11 @@ function Transpiler() {
         SequenceExpressionTranspiler,
         UpdateExpressionTranspiler
     ], function (Class) {
-        expressionTranspiler.addTranspiler(new Class(statementTranspiler, expressionTranspiler));
+        expressionTranspiler.addTranspiler(new Class(
+            statementTranspiler,
+            expressionTranspiler,
+            referenceStringifier
+        ));
     });
 
     expressionTranspiler.addTranspiler(

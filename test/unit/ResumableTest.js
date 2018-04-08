@@ -31,6 +31,20 @@ describe('Resumable', function () {
         this.resumable = new Resumable(this.transpiler);
     });
 
+    describe('static checkCallable() method', function () {
+        it('should not throw when the value is callable', function () {
+            expect(function () {
+                Resumable.checkCallable('myCallable', sinon.stub());
+            }).not.to.throw();
+        });
+
+        it('should throw when the value is not callable', function () {
+            expect(function () {
+                Resumable.checkCallable('myNonCallable', 21);
+            }).to.throw(TypeError, 'myNonCallable is not a function');
+        });
+    });
+
     describe('execute()', function () {
         describe('in default (sloppy) mode', function () {
             it('should execute the code in sloppy ES mode', function () {

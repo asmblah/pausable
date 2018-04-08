@@ -56,7 +56,7 @@ EOS
                         temp0 = print;
                         statementIndex = 2;
                     case 2:
-                        temp0(1);
+                        Resumable.checkCallable('print', temp0), temp0(1);
                         statementIndex = 3;
                     case 3:
                         break label_my_block;
@@ -64,7 +64,7 @@ EOS
                         temp1 = print;
                         statementIndex = 5;
                     case 5:
-                        temp1(2);
+                        Resumable.checkCallable('print', temp1), temp1(2);
                         statementIndex = 6;
                     }
                 }
@@ -154,7 +154,7 @@ EOS
                         temp0 = print;
                         statementIndex = 2;
                     case 2:
-                        temp0(1);
+                        Resumable.checkCallable('print', temp0), temp0(1);
                         statementIndex = 3;
                     case 3:
                         statementIndex = 4;
@@ -172,7 +172,7 @@ EOS
                                 temp1 = print;
                                 statementIndex = 5;
                             case 5:
-                                temp1(2);
+                                Resumable.checkCallable('print', temp1), temp1(2);
                                 statementIndex = 6;
                             case 6:
                                 break label_my_block;
@@ -180,7 +180,7 @@ EOS
                                 temp2 = print;
                                 statementIndex = 8;
                             case 8:
-                                temp2(3);
+                                Resumable.checkCallable('print', temp2), temp2(3);
                                 statementIndex = 9;
                             case 9:
                                 break label_another_block;
@@ -188,7 +188,7 @@ EOS
                                 temp3 = print;
                                 statementIndex = 11;
                             case 11:
-                                temp3(4);
+                                Resumable.checkCallable('print', temp3), temp3(4);
                                 statementIndex = 12;
                             }
                         }
@@ -197,7 +197,7 @@ EOS
                         temp4 = print;
                         statementIndex = 13;
                     case 13:
-                        temp4(5);
+                        Resumable.checkCallable('print', temp4), temp4(5);
                         statementIndex = 14;
                     }
                 }
