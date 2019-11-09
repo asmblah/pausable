@@ -20,9 +20,9 @@ describe('Resumable pausing during a resume from a previous pause', function () 
 exports.first = true;
 (function first() { // New stack frame
     exports.second = true;
-    tools.getMe(21);
+    exports.result1 = tools.getMe(21);
     exports.third = true;
-    tools.getMe(22); // We'll still be resuming the call stack from the first call
+    exports.result2 = tools.getMe(22); // We'll still be resuming the call stack from the first call
     exports.fourth = true;
 }());
 exports.fifth = true;
@@ -46,7 +46,9 @@ EOS
             expectedExports: {
                 first: true,
                 second: true,
+                result1: 21,
                 third: true,
+                result2: 22,
                 fourth: true,
                 fifth: true
             }
