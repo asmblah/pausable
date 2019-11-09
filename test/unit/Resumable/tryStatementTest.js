@@ -402,7 +402,7 @@ EOS
 exports.first = giveMeAsync(1);
 try {
     exports.second = giveMeAsync(2);
-    throw 'jump';
+    throw new Error('jump');
     exports.third = giveMeAsync(3);
 } catch (error) {
     exports.fourth = error;
@@ -428,11 +428,11 @@ EOS
                 };
             },
             // An error should still be raised because we re-throw it inside the catch
-            expectedError: 'jump',
+            expectedError: new Error('jump'),
             expectedExports: {
                 first: 1,
                 second: 2,
-                fourth: 'jump',
+                fourth: new Error('jump'),
                 sixth: 6
             }
         },

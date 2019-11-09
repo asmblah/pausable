@@ -218,6 +218,23 @@ describe('ReferenceStringifier', function () {
                 .to.equal('{...}');
         });
 
+        it('should return a comma-separated set of ellipses for a sequence expression', function () {
+            expect(this.stringifier.stringify({
+                'type': Syntax.SequenceExpression,
+                'expressions': [
+                    {
+                        'type': Syntax.Identifier,
+                        'name': 'firstExpr'
+                    },
+                    {
+                        'type': Syntax.Identifier,
+                        'name': 'secondExpr'
+                    }
+                ]
+            }))
+                .to.equal('(..,..)');
+        });
+
         it('should use `this` for this', function () {
             expect(this.stringifier.stringify({
                 'type': Syntax.ThisExpression

@@ -83,6 +83,10 @@ _.extend(ReferenceStringifier.prototype, {
             return '{...}';
         }
 
+        if (referenceNode[TYPE] === Syntax.SequenceExpression) {
+            return '(..,..)';
+        }
+
         if (referenceNode[TYPE] === Syntax.ThisExpression) {
             return 'this';
         }

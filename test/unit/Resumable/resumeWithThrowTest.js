@@ -93,7 +93,7 @@ EOS
         'throwing an error outside any try..catch': {
             code: nowdoc(function () {/*<<<EOS
 exports.before = true;
-tools.throwMe(21);
+tools.throwMe(new Error('21'));
 exports.after = true;
 EOS
 */;}), // jshint ignore:line
@@ -112,7 +112,7 @@ EOS
                     }
                 };
             },
-            expectedError: 21
+            expectedError: new Error(21)
         }
     }, tools.check);
 });
