@@ -15,10 +15,13 @@ var _ = require('microdash'),
     BlockContext = require('../BlockContext'),
     BLOCK = 'block',
     BODY = 'body',
+    CAUGHT_ERROR_VARIABLE = 'resumableError',
     HANDLER = 'handler',
     FINALIZER = 'finalizer',
     NAME = 'name',
     PARAM = 'param',
+    PAUSE_EXCEPTION_VARIABLE = 'resumablePause',
+    UNCAUGHT_ERROR_VARIABLE = 'resumableUncaughtError',
     Syntax = estraverse.Syntax;
 
 function TryStatementTranspiler(statementTranspiler, expressionTranspiler) {
@@ -37,7 +40,7 @@ _.extend(TryStatementTranspiler.prototype, {
             handler = node[HANDLER],
             catchParam = handler ? handler[PARAM] : {
                 'type': Syntax.Identifier,
-                'name': 'resumableError'
+                'name': CAUGHT_ERROR_VARIABLE
             },
             hasCatch = handler && handler[BODY][BODY].length > 0,
             finalizer = node[FINALIZER],
@@ -52,8 +55,8 @@ _.extend(TryStatementTranspiler.prototype, {
         if (finalizer) {
             functionContext.enterTryWithFinallyClause();
 
-            if (!handler && !functionContext.hasVariableDefined('resumableUncaughtError')) {
-                functionContext.addVariable('resumableUncaughtError');
+            if (!handler && !functionContext.hasVariableDefined(UNCAUGHT_ERROR_VARIABLE)) {
+                functionContext.addVariable(UNCAUGHT_ERROR_VARIABLE);
             }
         }
 
@@ -135,7 +138,7 @@ _.extend(TryStatementTranspiler.prototype, {
                             'type': Syntax.CatchClause,
                             'param': {
                                 'type': Syntax.Identifier,
-                                'name': 'resumableError'
+                                'name': CAUGHT_ERROR_VARIABLE
                             },
                             'body': {
                                 'type': Syntax.BlockStatement,
@@ -145,7 +148,7 @@ _.extend(TryStatementTranspiler.prototype, {
                                         'type': Syntax.BinaryExpression,
                                         'left': {
                                             'type': Syntax.Identifier,
-                                            'name': 'resumableError'
+                                            'name': CAUGHT_ERROR_VARIABLE
                                         },
                                         'operator': 'instanceof',
                                         'right': {
@@ -169,12 +172,12 @@ _.extend(TryStatementTranspiler.prototype, {
                                                 'type': Syntax.AssignmentExpression,
                                                 'left': {
                                                     'type': Syntax.Identifier,
-                                                    'name': 'resumablePause'
+                                                    'name': PAUSE_EXCEPTION_VARIABLE
                                                 },
                                                 'operator': '=',
                                                 'right': {
                                                     'type': Syntax.Identifier,
-                                                    'name': 'resumableError'
+                                                    'name': CAUGHT_ERROR_VARIABLE
                                                 }
                                             }
                                         }, {
@@ -203,7 +206,7 @@ _.extend(TryStatementTranspiler.prototype, {
                                                 'operator': '=',
                                                 'right': {
                                                     'type': Syntax.Identifier,
-                                                    'name': 'resumableError'
+                                                    'name': CAUGHT_ERROR_VARIABLE
                                                 }
                                             }
                                         }]
@@ -212,7 +215,7 @@ _.extend(TryStatementTranspiler.prototype, {
                                     'type': Syntax.ThrowStatement,
                                     'argument': {
                                         'type': Syntax.Identifier,
-                                        'name': 'resumableError'
+                                        'name': CAUGHT_ERROR_VARIABLE
                                     }
                                 }]
                             }
@@ -274,7 +277,7 @@ _.extend(TryStatementTranspiler.prototype, {
                         'type': Syntax.IfStatement,
                         'test': {
                             'type': Syntax.Identifier,
-                            'name': 'resumablePause'
+                            'name': PAUSE_EXCEPTION_VARIABLE
                         },
                         'consequent': {
                             'type': Syntax.BlockStatement,
@@ -282,7 +285,7 @@ _.extend(TryStatementTranspiler.prototype, {
                                 'type': Syntax.ThrowStatement,
                                 'argument': {
                                     'type': Syntax.Identifier,
-                                    'name': 'resumablePause'
+                                    'name': PAUSE_EXCEPTION_VARIABLE
                                 }
                             }]
                         },
@@ -322,7 +325,7 @@ _.extend(TryStatementTranspiler.prototype, {
                         'type': Syntax.IfStatement,
                         'test': {
                             'type': Syntax.Identifier,
-                            'name': 'resumableUncaughtError'
+                            'name': UNCAUGHT_ERROR_VARIABLE
                         },
                         'consequent': {
                             'type': Syntax.BlockStatement,
@@ -330,7 +333,7 @@ _.extend(TryStatementTranspiler.prototype, {
                                 'type': Syntax.ThrowStatement,
                                 'argument': {
                                     'type': Syntax.Identifier,
-                                    'name': 'resumableUncaughtError'
+                                    'name': UNCAUGHT_ERROR_VARIABLE
                                 }
                             }]
                         },
@@ -431,7 +434,7 @@ _.extend(TryStatementTranspiler.prototype, {
                         'type': Syntax.AssignmentExpression,
                         'left': {
                             'type': Syntax.Identifier,
-                            'name': 'resumablePause'
+                            'name': PAUSE_EXCEPTION_VARIABLE
                         },
                         'operator': '=',
                         'right': catchParam
@@ -453,7 +456,7 @@ _.extend(TryStatementTranspiler.prototype, {
                             'type': Syntax.AssignmentExpression,
                             'left': {
                                 'type': Syntax.Identifier,
-                                'name': 'resumableUncaughtError'
+                                'name': UNCAUGHT_ERROR_VARIABLE
                             },
                             'operator': '=',
                             'right': catchParam
