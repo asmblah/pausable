@@ -32,12 +32,16 @@ _.extend(TryStatementTranspiler.prototype, {
     },
 
     transpile: function (node, parent, functionContext, blockContext) {
-        var catchParam,
-            catchStartIndex = null,
+        var catchStartIndex = null,
             catchStatements = [],
             handler = node[HANDLER],
+            catchParam = handler ? handler[PARAM] : {
+                'type': Syntax.Identifier,
+                'name': 'resumableError'
+            },
             hasCatch = handler && handler[BODY][BODY].length > 0,
             finalizer = node[FINALIZER],
+            catchParameter,
             ownBlockContext = new BlockContext(functionContext),
             statement,
             transpiler = this,
@@ -47,6 +51,10 @@ _.extend(TryStatementTranspiler.prototype, {
 
         if (finalizer) {
             functionContext.enterTryWithFinallyClause();
+
+            if (!handler && !functionContext.hasVariableDefined('resumableUncaughtError')) {
+                functionContext.addVariable('resumableUncaughtError');
+            }
         }
 
         statement = blockContext.prepareStatement();
@@ -57,10 +65,10 @@ _.extend(TryStatementTranspiler.prototype, {
 
         if (hasCatch) {
             catchStartIndex = functionContext.getCurrentStatementIndex();
+            catchParameter = functionContext.getTempName();
 
             (function () {
                 var catchClauseBlockContext = new BlockContext(functionContext),
-                    catchParameter = functionContext.getTempName(),
                     resumeThrowStatement = ownBlockContext.addResumeThrow();
 
                 transpiler.statementTranspiler.transpileArray(handler[BODY][BODY], handler, functionContext, catchClauseBlockContext);
@@ -111,8 +119,105 @@ _.extend(TryStatementTranspiler.prototype, {
                                 }
                             ]
                         }
-                    },
-                    catchClauseBlockContext.getSwitchStatement()
+                    }
+                );
+
+                catchStatements.push(
+                    {
+                        'type': Syntax.TryStatement,
+                        'block': {
+                            'type': Syntax.BlockStatement,
+                            'body': [
+                                catchClauseBlockContext.getSwitchStatement()
+                            ]
+                        },
+                        'handler': {
+                            'type': Syntax.CatchClause,
+                            'param': {
+                                'type': Syntax.Identifier,
+                                'name': 'resumableError'
+                            },
+                            'body': {
+                                'type': Syntax.BlockStatement,
+                                'body': [{
+                                    'type': Syntax.IfStatement,
+                                    'test': {
+                                        'type': Syntax.BinaryExpression,
+                                        'left': {
+                                            'type': Syntax.Identifier,
+                                            'name': 'resumableError'
+                                        },
+                                        'operator': 'instanceof',
+                                        'right': {
+                                            'type': Syntax.MemberExpression,
+                                            'object': {
+                                                'type': Syntax.Identifier,
+                                                'name': 'Resumable'
+                                            },
+                                            'property': {
+                                                'type': Syntax.Identifier,
+                                                'name': 'PauseException'
+                                            },
+                                            'computed': false
+                                        }
+                                    },
+                                    'consequent': {
+                                        'type': Syntax.BlockStatement,
+                                        'body': [{
+                                            'type': Syntax.ExpressionStatement,
+                                            'expression': {
+                                                'type': Syntax.AssignmentExpression,
+                                                'left': {
+                                                    'type': Syntax.Identifier,
+                                                    'name': 'resumablePause'
+                                                },
+                                                'operator': '=',
+                                                'right': {
+                                                    'type': Syntax.Identifier,
+                                                    'name': 'resumableError'
+                                                }
+                                            }
+                                        }, {
+                                            'type': Syntax.ExpressionStatement,
+                                            'expression': {
+                                                'type': Syntax.AssignmentExpression,
+                                                'left': {
+                                                    'type': Syntax.Identifier,
+                                                    'name': catchParameter
+                                                },
+                                                'operator': '=',
+                                                'right': catchParam
+                                            }
+                                        }]
+                                    },
+                                    'alternate': {
+                                        'type': Syntax.BlockStatement,
+                                        'body': [{
+                                            'type': Syntax.ExpressionStatement,
+                                            'expression': {
+                                                'type': Syntax.AssignmentExpression,
+                                                'left': {
+                                                    'type': Syntax.Identifier,
+                                                    'name': catchParameter
+                                                },
+                                                'operator': '=',
+                                                'right': {
+                                                    'type': Syntax.Identifier,
+                                                    'name': 'resumableError'
+                                                }
+                                            }
+                                        }]
+                                    }
+                                }, {
+                                    'type': Syntax.ThrowStatement,
+                                    'argument': {
+                                        'type': Syntax.Identifier,
+                                        'name': 'resumableError'
+                                    }
+                                }]
+                            }
+                        }
+                    }
                 );
 
                 functionContext.addCatch({
@@ -138,10 +243,6 @@ _.extend(TryStatementTranspiler.prototype, {
                 ]
             }
         };
-        catchParam = handler ? handler[PARAM] : {
-            'type': Syntax.Identifier,
-            'name': 'resumableError'
-        };
         tryNode[HANDLER] = {
             'type': Syntax.CatchClause,
             'param': catchParam,
@@ -153,37 +254,6 @@ _.extend(TryStatementTranspiler.prototype, {
 
         if (finalizer) {
             functionContext.enterTryFinallyClause();
-
-            catchStatements.splice(1, 0, {
-                'type': Syntax.ExpressionStatement,
-                'expression': {
-                    'type': Syntax.AssignmentExpression,
-                    'left': {
-                        'type': Syntax.Identifier,
-                        'name': 'resumableUncaughtError'
-                    },
-                    'operator': '=',
-                    'right': catchParam
-                }
-            });
-
-            if (handler) {
-                catchStatements.push({
-                    'type': Syntax.ExpressionStatement,
-                    'expression': {
-                        'type': Syntax.AssignmentExpression,
-                        'left': {
-                            'type': Syntax.Identifier,
-                            'name': 'resumableUncaughtError'
-                        },
-                        'operator': '=',
-                        'right': {
-                            'type': Syntax.Identifier,
-                            'name': 'null'
-                        }
-                    }
-                });
-            }
 
             (function () {
                 var finallyClauseBlockContext = new BlockContext(functionContext),
@@ -247,24 +317,26 @@ _.extend(TryStatementTranspiler.prototype, {
                     finallySwitch
                 ];
 
-                finallyStatements.push({
-                    'type': Syntax.IfStatement,
-                    'test': {
-                        'type': Syntax.Identifier,
-                        'name': 'resumableUncaughtError'
-                    },
-                    'consequent': {
-                        'type': Syntax.BlockStatement,
-                        'body': [{
-                            'type': Syntax.ThrowStatement,
-                            'argument': {
-                                'type': Syntax.Identifier,
-                                'name': 'resumableUncaughtError'
-                            }
-                        }]
-                    },
-                    'alternate': null
-                });
+                if (!handler) {
+                    finallyStatements.push({
+                        'type': Syntax.IfStatement,
+                        'test': {
+                            'type': Syntax.Identifier,
+                            'name': 'resumableUncaughtError'
+                        },
+                        'consequent': {
+                            'type': Syntax.BlockStatement,
+                            'body': [{
+                                'type': Syntax.ThrowStatement,
+                                'argument': {
+                                    'type': Syntax.Identifier,
+                                    'name': 'resumableUncaughtError'
+                                }
+                            }]
+                        },
+                        'alternate': null
+                    });
+                }
 
                 if (functionContext.hasReturnInTryOutsideFinally()) {
                     finallyStatements.push({
@@ -295,6 +367,27 @@ _.extend(TryStatementTranspiler.prototype, {
                     });
                 }
 
+                if (hasCatch) {
+                    finallyStatements.push({
+                        'type': Syntax.IfStatement,
+                        'test': {
+                            'type': Syntax.Identifier,
+                            'name': catchParameter
+                        },
+                        'consequent': {
+                            'type': Syntax.BlockStatement,
+                            'body': [{
+                                'type': Syntax.ThrowStatement,
+                                'argument': {
+                                    'type': Syntax.Identifier,
+                                    'name': catchParameter
+                                }
+                            }]
+                        },
+                        'alternate': null
+                    });
+                }
+
                 tryNode[FINALIZER] = {
                     'type': Syntax.BlockStatement,
                     'body': finallyStatements
@@ -302,6 +395,13 @@ _.extend(TryStatementTranspiler.prototype, {
             }());
 
             functionContext.leaveTryFinallyClause();
+        }
+
+        if (!handler) {
+            catchStatements.unshift({
+                'type': Syntax.ThrowStatement,
+                'argument': catchParam
+            });
         }
 
         catchStatements.unshift({
@@ -336,14 +436,30 @@ _.extend(TryStatementTranspiler.prototype, {
                         'operator': '=',
                         'right': catchParam
                     }
-                }] : []).concat([
+                }] : []).concat(handler ? [
                     {
                         'type': Syntax.ThrowStatement,
                         'argument': catchParam
                     }
-                ])
+                ] : [])
             },
-            'alternate': null
+            'alternate': handler ?
+                null :
+                {
+                    'type': Syntax.BlockStatement,
+                    'body': [{
+                        'type': Syntax.ExpressionStatement,
+                        'expression': {
+                            'type': Syntax.AssignmentExpression,
+                            'left': {
+                                'type': Syntax.Identifier,
+                                'name': 'resumableUncaughtError'
+                            },
+                            'operator': '=',
+                            'right': catchParam
+                        }
+                    }]
+                }
         });
 
         statement.assign(tryNode);

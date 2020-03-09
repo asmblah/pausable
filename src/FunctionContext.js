@@ -98,7 +98,6 @@ _.extend(FunctionContext.prototype, {
         var context = this;
 
         if (context.tryWithFinallyClauseDepth === 0) {
-            context.addVariable('resumableUncaughtError');
             context.tryWithFinallyClause = true;
         }
 

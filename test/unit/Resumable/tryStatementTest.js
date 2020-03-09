@@ -98,6 +98,37 @@ EOS
                 third: true
             }
         },
+        'empty catch block when error is thrown': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = giveMeAsync(1);
+try {
+    exports.second = giveMeAsync(2);
+    throw new Error('my error');
+    exports.second = 'I should not be reached';
+} catch (error) {
+}
+exports.third = giveMeAsync(3);
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedExports: {
+                first: 1,
+                second: 2,
+                third: 3
+            }
+        },
         'try that makes a call that then pauses and resumes successfully': {
             code: nowdoc(function () {/*<<<EOS
 function goFetchAsyncThenAdd4(what) {
@@ -405,7 +436,7 @@ try {
     throw new Error('jump');
     exports.third = giveMeAsync(3);
 } catch (error) {
-    exports.fourth = error;
+    exports.fourth = giveMeAsync(error);
     throw error;
     exports.fifth = true; // Should not be reached
 } finally {
@@ -509,6 +540,39 @@ EOS
             },
             expectedResult: 'my final result'
         },
+        'throw inside try when there is no catch clause, only finally': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = giveMeAsync(1);
+try {
+    exports.second = giveMeAsync(2);
+    throw new Error('my error');
+    exports.third = giveMeAsync(3);
+} finally {
+    exports.fourth = giveMeAsync(4);
+}
+exports.fifth = giveMeAsync(5);
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedExports: {
+                first: 1,
+                second: 2,
+                fourth: 4
+            },
+            expectedError: new Error('my error')
+        },
         'nested try with catch and finally that throws again': {
             code: nowdoc(function () {/*<<<EOS
 exports.first = giveMeAsync(1);
@@ -584,6 +648,155 @@ EOS
                 fourth: 4
             },
             expectedResult: 'my result from inside the try'
-        }
+        },
+        'throwing a new error inside catch clause with finally': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = giveMeAsync(1);
+try {
+    exports.second = giveMeAsync(2);
+    throw new Error('my first error');
+    exports.third = giveMeAsync(3);
+} catch (error) {
+    exports.fourth = giveMeAsync(4);
+    throw new Error('my second error');
+    exports.fifth = giveMeAsync(5);
+} finally {
+    exports.sixth = giveMeAsync(6);
+}
+exports.seventh = 'I should not be reached';
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedError: new Error('my second error'),
+            expectedExports: {
+                first: 1,
+                second: 2,
+                fourth: 4,
+                sixth: 6
+            }
+        },
+        'throwing a new error inside catch clause without finally': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = giveMeAsync(1);
+try {
+    exports.second = giveMeAsync(2);
+    throw new Error('my first error');
+    exports.third = giveMeAsync(3);
+} catch (error) {
+    exports.fourth = giveMeAsync(4);
+    throw new Error('my second error');
+    exports.fifth = giveMeAsync(5);
+}
+exports.sixth = 'I should not be reached';
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedError: new Error('my second error'),
+            expectedExports: {
+                first: 1,
+                second: 2,
+                fourth: 4
+            }
+        },
+        'returning from inside catch clause with finally': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = giveMeAsync(1);
+try {
+    exports.second = giveMeAsync(2);
+    throw new Error('my error');
+    exports.third = giveMeAsync(3);
+} catch (error) {
+    exports.fourth = giveMeAsync(4);
+    return 'my result';
+    exports.fifth = 'I should not be reached';
+} finally {
+    exports.sixth = giveMeAsync(6);
+}
+exports.seventh = 'I should not be reached';
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedResult: 'my result',
+            expectedExports: {
+                first: 1,
+                second: 2,
+                fourth: 4,
+                sixth: 6
+            }
+        },
+        'throwing a new error inside finally clause': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = giveMeAsync(1);
+try {
+    exports.second = giveMeAsync(2);
+    throw new Error('my first error');
+    exports.third = giveMeAsync(3);
+} catch (error) {
+    exports.fourth = giveMeAsync(4);
+} finally {
+    exports.fifth = giveMeAsync(5);
+    throw new Error('my second error');
+    exports.sixth = 'I should not be reached';
+}
+exports.seventh = 'I should not be reached';
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedError: new Error('my second error'),
+            expectedExports: {
+                first: 1,
+                second: 2,
+                fourth: 4,
+                fifth: 5
+            }
+        },
     }, tools.check);
 });
