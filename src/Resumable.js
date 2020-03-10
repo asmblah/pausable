@@ -29,6 +29,8 @@ _.extend(Resumable, {
     PauseException: PauseException,
     ResumeException: ResumeException,
 
+    UNSET: {}, // A sentinel value to use in lieu of adding additional flag variables
+
     /**
      * Checks whether the provided value is callable, throwing a readable error
      * if it is not, to improve the debugging experience

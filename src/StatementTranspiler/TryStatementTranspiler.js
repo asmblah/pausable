@@ -345,16 +345,29 @@ _.extend(TryStatementTranspiler.prototype, {
                     finallyStatements.push({
                         'type': Syntax.IfStatement,
                         'test': {
-                            /*
-                             * If no value has been returned, the result will be undefined,
-                             * so the default of `undefined` for this var will work fine.
-                             *
-                             * If an error has been thrown, we won't want to cancel that by returning
-                             * from inside the finally clause, but that will have been handled at this point
-                             * by the re-throw just above here.
-                             */
-                            'type': Syntax.Identifier,
-                            'name': 'resumableReturnValue'
+                            'type': Syntax.BinaryExpression,
+                            'left': {
+                                /*
+                                 * If an error has been thrown, we won't want to cancel that by returning
+                                 * from inside the finally clause, but that will have been handled at this point
+                                 * by the re-throw just above here.
+                                 */
+                                'type': Syntax.Identifier,
+                                'name': 'resumableReturnValue'
+                            },
+                            'operator': '!==',
+                            'right': {
+                                'type': Syntax.MemberExpression,
+                                'object': {
+                                    'type': Syntax.Identifier,
+                                    'name': 'Resumable'
+                                },
+                                'property': {
+                                    'type': Syntax.Identifier,
+                                    'name': 'UNSET'
+                                },
+                                'computed': false
+                            }
                         },
                         'consequent': {
                             'type': Syntax.BlockStatement,

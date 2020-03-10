@@ -66,14 +66,31 @@ _.extend(FunctionContext.prototype, {
         var context = this;
 
         if (context.tryWithFinallyClauseDepth > 0) {
-            context.addVariable('resumableReturnValue');
+            context.addVariable('resumableReturnValue', {
+                'type': Syntax.MemberExpression,
+                'object': {
+                    'type': Syntax.Identifier,
+                    'name': 'Resumable'
+                },
+                'property': {
+                    'type': Syntax.Identifier,
+                    'name': 'UNSET'
+                },
+                'computed': false
+            });
         }
 
         context.returnInTryOutsideFinally = true;
     },
 
-    addVariable: function (name) {
-        this.variables.push(name);
+    /**
+     * Defines a variable in the context
+     *
+     * @param {string} name
+     * @param {Object=} valueAST
+     */
+    addVariable: function (name, valueAST) {
+        this.variables.push({name: name, valueAST: valueAST || null});
     },
 
     clearLastAssignments: function () {
@@ -161,16 +178,18 @@ _.extend(FunctionContext.prototype, {
             stateSetup = acorn.parse('if (Resumable._resumeState_) { statementIndex = Resumable._resumeState_.statementIndex; }').body[0];
 
         // Make sure the variables are always output in alphabetical order, for consistency
-        functionContext.variables.sort();
+        functionContext.variables.sort(function (variableA, variableB) {
+            return variableA.name.localeCompare(variableB.name);
+        });
 
-        _.each(functionContext.variables, function (name) {
+        _.each(functionContext.variables, function (variable) {
             declaration[DECLARATIONS].push({
                 'type': Syntax.VariableDeclarator,
                 'id': {
                     'type': Syntax.Identifier,
-                    'name': name
+                    'name': variable.name
                 },
-                'init': null
+                'init': variable.valueAST
             });
         });
 
@@ -498,6 +517,34 @@ _.extend(FunctionContext.prototype, {
     },
 
     /**
+     * Fetches the value AST for the specified variable, if set.
+     * If the variable is defined but has no value AST set, returns null.
+     * If the variable is not defined, an error will be thrown
+     *
+     * @param {string} variableName
+     * @return {Object}
+     * @throws {Error} Throws when the variable is not defined
+     */
+    getVariableValueAST: function (variableName) {
+        var context = this,
+            isDefined = false,
+            valueAST;
+
+        _.each(context.variables, function (variable) {
+            if (variable.name === variableName) {
+                isDefined = true;
+                valueAST = variable.valueAST;
+            }
+        });
+
+        if (!isDefined) {
+            throw new Error('Variable "' + variableName + '" is not defined');
+        }
+
+        return valueAST;
+    },
+
+    /**
      * Returns true if this function contains a return statement, false otherwise
      *
      * @return {boolean}
@@ -506,6 +553,13 @@ _.extend(FunctionContext.prototype, {
         return this.returnInTryOutsideFinally;
     },
 
+    /**
+     * Determines whether this function contains either a variable declaration
+     * or a function declaration for the given name
+     *
+     * @param {string} name
+     * @return {boolean}
+     */
     hasVariableDefined: function (name) {
         var isDefined = false;
 
@@ -517,7 +571,7 @@ _.extend(FunctionContext.prototype, {
         });
 
         _.each(this.variables, function (variable) {
-            if (variable === name) {
+            if (variable.name === name) {
                 isDefined = true;
             }
         });

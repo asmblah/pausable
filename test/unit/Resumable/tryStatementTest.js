@@ -798,5 +798,38 @@ EOS
                 fifth: 5
             }
         },
+        'returning falsy value from try with only finally': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = giveMeAsync(1);
+try {
+    exports.second = giveMeAsync(2);
+    return 0;
+    exports.third = 'I should not be reached';
+} finally {
+    exports.fourth = giveMeAsync(4);
+}
+exports.fifth = 'I should not be reached';
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedExports: {
+                first: 1,
+                second: 2,
+                fourth: 4
+            },
+            expectedResult: 0
+        }
     }, tools.check);
 });
