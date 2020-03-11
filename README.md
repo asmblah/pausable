@@ -1,6 +1,6 @@
 # Pausable
 
-Pause and resume JavaScript code from arbitrary places.
+Pause and resume JavaScript code from arbitrary points.
 
 ## Installation
 
