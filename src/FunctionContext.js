@@ -31,6 +31,7 @@ function FunctionContext() {
     this.nextTempIndex = 0;
     this.parameters = [];
     this.returnInTryOutsideFinally = false;
+    this.tempVariables = [];
     this.tryFinallyClauseDepth = 0;
     this.tryWithFinallyClause = false;
     this.tryWithFinallyClauseDepth = 0;
@@ -172,7 +173,6 @@ _.extend(FunctionContext.prototype, {
             declaration = acorn.parse('var statementIndex = 0;').body[0],
             functionContext = this,
             functionSetup = [],
-            index,
             statements = [],
             stateProperties = [],
             stateSetup = acorn.parse('if (Resumable._resumeState_) { statementIndex = Resumable._resumeState_.statementIndex; }').body[0];
@@ -279,17 +279,17 @@ _.extend(FunctionContext.prototype, {
             });
         }
 
-        for (index = 0; index < functionContext.nextTempIndex; index++) {
+        _.each(functionContext.tempVariables, function (variable) {
             stateProperties.push({
                 'type': Syntax.Property,
                 'kind': 'init',
                 'key': {
                     'type': Syntax.Identifier,
-                    'name': 'temp' + index
+                    'name': variable.name
                 },
                 'value': {
                     'type': Syntax.Identifier,
-                    'name': 'temp' + index
+                    'name': variable.name
                 }
             });
 
@@ -297,9 +297,9 @@ _.extend(FunctionContext.prototype, {
                 'type': Syntax.VariableDeclarator,
                 'id': {
                     'type': Syntax.Identifier,
-                    'name': 'temp' + index
+                    'name': variable.name
                 },
-                'init': null
+                'init': variable.valueAST
             });
 
             stateSetup.consequent.body.push({
@@ -309,12 +309,12 @@ _.extend(FunctionContext.prototype, {
                     'operator': '=',
                     'left': {
                         'type': Syntax.Identifier,
-                        'name': 'temp' + index,
+                        'name': variable.name,
                     },
-                    'right': acorn.parse('Resumable._resumeState_.temp' + index).body[0].expression
+                    'right': acorn.parse('Resumable._resumeState_.' + variable.name).body[0].expression
                 }
             });
-        }
+        });
 
         stateSetup.consequent.body.push(acorn.parse('Resumable._resumeState_ = null;').body[0]);
 
@@ -481,8 +481,20 @@ _.extend(FunctionContext.prototype, {
         return statements;
     },
 
-    getTempName: function () {
-        return 'temp' + this.nextTempIndex++;
+    /**
+     * Fetches the next available temporary variable name, marking it as in use.
+     * An AST node for the initial value to assign can optionally be passed
+     *
+     * @param {Object=} valueAST
+     * @return {string}
+     */
+    getTempName: function (valueAST) {
+        var context = this,
+            name = 'temp' + context.nextTempIndex++;
+
+        context.tempVariables.push({name: name, valueAST: valueAST || null});
+
+        return name;
     },
 
     getTempNameForVariable: function (variableName, blockContext) {

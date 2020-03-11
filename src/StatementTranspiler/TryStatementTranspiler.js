@@ -79,7 +79,18 @@ _.extend(TryStatementTranspiler.prototype, {
 
         if (hasCatch) {
             catchStartIndex = functionContext.getCurrentStatementIndex();
-            catchParameter = functionContext.getTempName();
+            catchParameter = functionContext.getTempName(finalizer ? {
+                'type': Syntax.MemberExpression,
+                'object': {
+                    'type': Syntax.Identifier,
+                    'name': 'Resumable'
+                },
+                'property': {
+                    'type': Syntax.Identifier,
+                    'name': 'UNSET'
+                },
+                'computed': false
+            } : null);
 
             (function () {
                 var catchClauseBlockContext = new BlockContext(functionContext),
@@ -414,8 +425,24 @@ _.extend(TryStatementTranspiler.prototype, {
                     finallyStatements.push({
                         'type': Syntax.IfStatement,
                         'test': {
-                            'type': Syntax.Identifier,
-                            'name': catchParameter
+                            'type': Syntax.BinaryExpression,
+                            'left': {
+                                'type': Syntax.Identifier,
+                                'name': catchParameter
+                            },
+                            'operator': '!==',
+                            'right': {
+                                'type': Syntax.MemberExpression,
+                                'object': {
+                                    'type': Syntax.Identifier,
+                                    'name': 'Resumable'
+                                },
+                                'property': {
+                                    'type': Syntax.Identifier,
+                                    'name': 'UNSET'
+                                },
+                                'computed': false
+                            }
                         },
                         'consequent': {
                             'type': Syntax.BlockStatement,

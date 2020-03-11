@@ -326,7 +326,7 @@ EOS
 */;}), // jshint ignore:line
             expectedOutputJS = nowdoc(function () {/*<<<EOS
 (function () {
-    var statementIndex = 0, temp0;
+    var statementIndex = 0, temp0 = Resumable.UNSET;
     return function resumableScope() {
         var resumablePause = null;
         if (Resumable._resumeState_) {
@@ -390,7 +390,7 @@ EOS
                         d = 4;
                         statementIndex = 5;
                     }
-                    if (temp0) {
+                    if (temp0 !== Resumable.UNSET) {
                         throw temp0;
                     }
                 }
@@ -794,7 +794,7 @@ EOS
 */;}), // jshint ignore:line
             expectedOutputJS = nowdoc(function () {/*<<<EOS
 (function () {
-    var statementIndex = 0, resumableReturnValue = Resumable.UNSET, temp0;
+    var statementIndex = 0, resumableReturnValue = Resumable.UNSET, temp0 = Resumable.UNSET;
     return function resumableScope() {
         var resumablePause = null;
         if (Resumable._resumeState_) {
@@ -861,7 +861,7 @@ EOS
                     if (resumableReturnValue !== Resumable.UNSET) {
                         return resumableReturnValue;
                     }
-                    if (temp0) {
+                    if (temp0 !== Resumable.UNSET) {
                         throw temp0;
                     }
                 }

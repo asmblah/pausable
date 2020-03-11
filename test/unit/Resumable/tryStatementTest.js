@@ -863,6 +863,43 @@ EOS
                 second: 2,
                 fourth: 4
             }
+        },
+        'throwing a new falsy value from catch when there is a finally clause': {
+            code: nowdoc(function () {/*<<<EOS
+exports.first = giveMeAsync(1);
+try {
+    exports.second = giveMeAsync(2);
+    throw new Error('my first error');
+} catch (e) {
+    exports.third = giveMeAsync(3);
+    throw 0;
+    exports.fourth = 'I should not be reached';
+} finally {
+    exports.fifth = giveMeAsync(5);
+}
+exports.sixth = 'I should not be reached';
+EOS
+*/;}), // jshint ignore:line
+            expose: function (state) {
+                return {
+                    giveMeAsync: function (what) {
+                        var pause = state.resumable.createPause();
+
+                        setTimeout(function () {
+                            pause.resume(what);
+                        });
+
+                        pause.now();
+                    }
+                };
+            },
+            expectedError: 0,
+            expectedExports: {
+                first: 1,
+                second: 2,
+                third: 3,
+                fifth: 5
+            }
         }
     }, tools.check);
 });
