@@ -1,5 +1,7 @@
 # Pausable
 
+[![Build Status](https://secure.travis-ci.org/asmblah/pausable.png?branch=master)](https://travis-ci.org/asmblah/pausable)
+
 Pause and resume JavaScript code from arbitrary points.
 
 ## Installation
