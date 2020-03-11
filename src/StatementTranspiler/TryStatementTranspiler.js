@@ -56,7 +56,18 @@ _.extend(TryStatementTranspiler.prototype, {
             functionContext.enterTryWithFinallyClause();
 
             if (!handler && !functionContext.hasVariableDefined(UNCAUGHT_ERROR_VARIABLE)) {
-                functionContext.addVariable(UNCAUGHT_ERROR_VARIABLE);
+                functionContext.addVariable(UNCAUGHT_ERROR_VARIABLE, {
+                    'type': Syntax.MemberExpression,
+                    'object': {
+                        'type': Syntax.Identifier,
+                        'name': 'Resumable'
+                    },
+                    'property': {
+                        'type': Syntax.Identifier,
+                        'name': 'UNSET'
+                    },
+                    'computed': false
+                });
             }
         }
 
@@ -324,8 +335,24 @@ _.extend(TryStatementTranspiler.prototype, {
                     finallyStatements.push({
                         'type': Syntax.IfStatement,
                         'test': {
-                            'type': Syntax.Identifier,
-                            'name': UNCAUGHT_ERROR_VARIABLE
+                            'type': Syntax.BinaryExpression,
+                            'left': {
+                                'type': Syntax.Identifier,
+                                'name': UNCAUGHT_ERROR_VARIABLE
+                            },
+                            'operator': '!==',
+                            'right': {
+                                'type': Syntax.MemberExpression,
+                                'object': {
+                                    'type': Syntax.Identifier,
+                                    'name': 'Resumable'
+                                },
+                                'property': {
+                                    'type': Syntax.Identifier,
+                                    'name': 'UNSET'
+                                },
+                                'computed': false
+                            }
                         },
                         'consequent': {
                             'type': Syntax.BlockStatement,

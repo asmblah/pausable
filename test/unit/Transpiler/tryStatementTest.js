@@ -448,7 +448,7 @@ EOS
 */;}), // jshint ignore:line
             expectedOutputJS = nowdoc(function () {/*<<<EOS
 (function () {
-    var statementIndex = 0, resumableUncaughtError;
+    var statementIndex = 0, resumableUncaughtError = Resumable.UNSET;
     return function resumableScope() {
         var resumablePause = null;
         if (Resumable._resumeState_) {
@@ -489,7 +489,7 @@ EOS
                         c = 3;
                         statementIndex = 4;
                     }
-                    if (resumableUncaughtError) {
+                    if (resumableUncaughtError !== Resumable.UNSET) {
                         throw resumableUncaughtError;
                     }
                 }
@@ -549,7 +549,7 @@ EOS
 */;}), // jshint ignore:line
             expectedOutputJS = nowdoc(function () {/*<<<EOS
 (function () {
-    var statementIndex = 0, resumableUncaughtError;
+    var statementIndex = 0, resumableUncaughtError = Resumable.UNSET;
     return function resumableScope() {
         var resumablePause = null;
         if (Resumable._resumeState_) {
@@ -617,7 +617,7 @@ EOS
                             case 8:
                                 throw 'inner';
                             }
-                            if (resumableUncaughtError) {
+                            if (resumableUncaughtError !== Resumable.UNSET) {
                                 throw resumableUncaughtError;
                             }
                         }
@@ -648,7 +648,7 @@ EOS
                         return 'my final result';
                         statementIndex = 12;
                     }
-                    if (resumableUncaughtError) {
+                    if (resumableUncaughtError !== Resumable.UNSET) {
                         throw resumableUncaughtError;
                     }
                 }
@@ -698,7 +698,7 @@ EOS
 */;}), // jshint ignore:line
             expectedOutputJS = nowdoc(function () {/*<<<EOS
 (function () {
-    var statementIndex = 0, resumableReturnValue = Resumable.UNSET, resumableUncaughtError;
+    var statementIndex = 0, resumableReturnValue = Resumable.UNSET, resumableUncaughtError = Resumable.UNSET;
     return function resumableScope() {
         var resumablePause = null;
         if (Resumable._resumeState_) {
@@ -739,7 +739,7 @@ EOS
                         c = 3;
                         statementIndex = 4;
                     }
-                    if (resumableUncaughtError) {
+                    if (resumableUncaughtError !== Resumable.UNSET) {
                         throw resumableUncaughtError;
                     }
                     if (resumableReturnValue !== Resumable.UNSET) {
@@ -919,7 +919,7 @@ EOS
 */;}), // jshint ignore:line
             expectedOutputJS = nowdoc(function () {/*<<<EOS
 (function () {
-    var statementIndex = 0, resumableUncaughtError;
+    var statementIndex = 0, resumableUncaughtError = Resumable.UNSET;
     return function resumableScope() {
         var resumablePause = null;
         if (Resumable._resumeState_) {
@@ -960,7 +960,7 @@ EOS
                         c = 3;
                         statementIndex = 4;
                     }
-                    if (resumableUncaughtError) {
+                    if (resumableUncaughtError !== Resumable.UNSET) {
                         throw resumableUncaughtError;
                     }
                 }
