@@ -112,7 +112,10 @@ EOS
                     }
                 };
             },
-            expectedError: new Error(21)
+            expectedError: new Error(21),
+            expectedExports: {
+                before: true
+            }
         }
     }, tools.check);
 });

@@ -67,10 +67,17 @@ module.exports = {
             if (scenario.hasOwnProperty('expectedError')) {
                 it('should reject the promise with the correct error', function () {
                     expect(this.error).not.to.be.null;
-                    expect(this.error).to.be.an.instanceOf(
-                        Object.getPrototypeOf(scenario.expectedError).constructor
-                    );
-                    expect(this.error.toString()).to.equal(scenario.expectedError.toString());
+
+                    if (typeof scenario.expectedError === 'object') {
+                        // Expecting an Error instance: check for correct class and message
+                        expect(this.error).to.be.an.instanceOf(
+                            Object.getPrototypeOf(scenario.expectedError).constructor
+                        );
+                        expect(this.error.toString()).to.equal(scenario.expectedError.toString());
+                    } else {
+                        // Expecting a primitive value: check for identity
+                        expect(this.error).to.equal(scenario.expectedError);
+                    }
                 });
             } else {
                 it('should not reject the promise', function () {
